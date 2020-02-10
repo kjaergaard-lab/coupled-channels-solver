@@ -20,21 +20,22 @@ if sel==0,
     fitfun=func(params,xplot);
 elseif sel==1,
     func=@(c,x) c(1)*sin(c(2)+atan(0.5*c(3)./(x-c(4)))).^2;
-    lb=[0,-2*pi,0,min(x)];ub=[4,2*pi,150,max(x)];
-%     lb=[0.5,-pi,0,min(x)];ub=[1,pi,1,max(x)];
-%     [m,idx]=max(abs(y));
+    
     [m,idx]=max(y);
     m=4;
     [~,idx2]=min(y);
     d=sign(x(idx)-x(idx2))*asin(sqrt((y(1)/4)));
     B0=tan(d)./sec(d).^2*(x(idx)/tan(d)+x(idx2)*tan(d));
     G=(x(idx)-B0)*2/tan(d);
-    guess=[m,d,G,B0];
-%     guess=[m,0.02,1,x(idx)];   
-    options=optimset('Display','off','TolX',1e-9,'TolFun',1e-9,'MaxFunEvals',1e4,'Maxiter',1e3);
-%     ex=abs(x-548.6)<0.1 | abs(x-547.9)<0.1;
-%     x=x(~ex);y=y(~ex);
+    G = max(G,1e-6);
+    x = x-B0;
+    guess=[m,d,G,B0*0];
+    lb=[0,-2*pi,0,min(x)];ub=[4,2*pi,150,max(x)];
+    options=optimset('Display','off','TolX',1e-11,'TolFun',1e-11,'MaxFunEvals',1e5,'Maxiter',1e4);
+    
     params=lsqcurvefit(func,guess,x,y,lb,ub,options);
+    params(4) = params(4)+B0;
+    x = x+B0;
     fitfun=func(params,xplot);
 elseif sel==2,
     func=@(c,x) c(1)*c(2).^2./4./(c(2).^2./4+(x-c(3)).^2);
