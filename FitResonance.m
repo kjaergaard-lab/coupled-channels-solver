@@ -22,12 +22,11 @@ elseif sel==1,
     func=@(c,x) c(1)*sin(c(2)+atan(0.5*c(3)./(x-c(4)))).^2;
     
     [m,idx]=max(y);
-    m=4;
+%     m=4;
     [~,idx2]=min(y);
     d=sign(x(idx)-x(idx2))*asin(sqrt((y(1)/4)));
-    B0=tan(d)./sec(d).^2*(x(idx)/tan(d)+x(idx2)*tan(d));
-    G=(x(idx)-B0)*2/tan(d);
-    G = max(G,1e-6);
+    B0=cos(d).^2*x(idx)+sin(d).^2*x(idx2);
+    G=sin(2*d)*(x(idx)-x(idx2));
     x = x-B0;
     guess=[m,d,G,B0*0];
     lb=[0,-2*pi,0,min(x)];ub=[4,2*pi,150,max(x)];
