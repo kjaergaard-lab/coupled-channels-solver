@@ -1,3 +1,4 @@
 *.log
 *.mat
 *.fig
+*.out
