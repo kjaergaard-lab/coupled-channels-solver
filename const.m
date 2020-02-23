@@ -30,6 +30,4 @@ classdef const < handle
             a=1e2*const.h*const.c/const.kb;
         end;
     end
-    
-    
 end
