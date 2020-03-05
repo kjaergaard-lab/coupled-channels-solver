@@ -1,5 +1,6 @@
 *.log
 *.mat
 *.fig
+*.out
 *.asv
 MultiChannel_Driver.m
