@@ -8,15 +8,15 @@ function [S,BVSymInt]=SymmetrizeSMatrixArbL(Sin,BVint,SymType)
 NChannels=size(Sin,1);
 [~,idx]=sort(BVint(:,3:4),2);
 tmp=zeros(size(BVint));
-for nn=1:NChannels,
+for nn=1:NChannels
     tmp(nn,:)=[BVint(nn,1:2) BVint(nn,(idx(nn,:)==1)*3+(idx(nn,:)==2)*4)];
-end;
+end
 BVSymInt=unique(tmp,'rows');
 NSymStates=size(BVSymInt,1);
 S=zeros(NSymStates,NSymStates,size(Sin,3));
 
-for row=1:NSymStates,
-    for col=1:NSymStates,
+for row=1:NSymStates
+    for col=1:NSymStates
         idxR1=all(repmat(BVSymInt(row,:),NChannels,1)==BVint,2);
         idxR2=all(repmat(BVSymInt(row,[1:2,4,3]),NChannels,1)==BVint,2);
         idxC1=all(repmat(BVSymInt(col,:),NChannels,1)==BVint,2);
@@ -26,5 +26,5 @@ for row=1:NSymStates,
         dC=BVSymInt(col,3)==BVSymInt(col,4);
         S(row,col,:)=S(row,col,:)./(sqrt(4*(1+dR).*(1+dC)));
         S(row,col,:)=S(row,col,:)+(S(row,col,:)==0 & row==col);
-    end;
-end;
+    end
+end

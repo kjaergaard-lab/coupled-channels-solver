@@ -26,9 +26,17 @@ classdef ScatteringMatrix < handle
             end
             
             obj.SS = ScatteringMatrixElement();
-            S2 = shiftdim(Sin,2);
+            if size(Sin,3)>1
+                S2 = shiftdim(Sin,2);
+            else
+                S2 = Sin;
+            end
             for nn=1:size(Sin,1)
-                S3 = squeeze(S2(:,:,obj.targetIndex));
+                if size(Sin,3)>1
+                    S3 = squeeze(S2(:,:,obj.targetIndex));
+                else
+                    S3 = S2(obj.targetIndex,:).';
+                end
                 obj.SS(nn,1) = ScatteringMatrixElement(S3(:,nn),S3(:,nn)-(nn==obj.targetIndex));
             end
             

@@ -10,14 +10,14 @@ function BasisSetGeneration(AtomPair,LVec,filename)
 
 %% Preamble
 constants;
-if nargin==2,
+if nargin==2
     Lstr=ProcessLstr(LVec);
     filename=[AtomPair,' Basis Set ',Lstr];
-end;
+end
 
 %% Non-user settable parameters
-switch AtomPair,
-    case 'KRb',
+switch AtomPair
+    case 'KRb'
         PotentialFunc=@KRbPotentialDD;  %Function describing the interaction potential
 
         %Angular momentum settings
@@ -145,7 +145,7 @@ switch AtomPair,
         
     otherwise
         error('Unsupported atom pair!  No file generated.');
-end;
+end
 
 NumSpinStates=(2*Spin+1);
 NumNSpinStates2=(2*NSpin2+1);
@@ -169,12 +169,12 @@ I=eye(NumChannels);
 % Fully uncoupled basis vectors BV1
 % |L mL mSK mIK mSRb mIRb> = |L mL mS1 mI1 mS2 mI2>
 count=1;
-for n1=1:numel(LVec),
-    for n2=1:(2*LVec(n1)+1),
-        for n3=1:NumSpinStates,
-            for n4=1:NumNSpinStates1,
-                for n5=1:NumSpinStates,
-                    for n6=1:NumNSpinStates2,
+for n1=1:numel(LVec)
+    for n2=1:(2*LVec(n1)+1)
+        for n3=1:NumSpinStates
+            for n4=1:NumNSpinStates1
+                for n5=1:NumSpinStates
+                    for n6=1:NumNSpinStates2
                         mL=-LVec(n1)+(n2-1);
                         mS1=-Spin+(n3-1);
                         mI1=-NSpin1+(n4-1);
@@ -182,24 +182,24 @@ for n1=1:numel(LVec),
                         mI2=-NSpin2+(n6-1);
                         BV1(count,:)=[LVec(n1),mL,mS1,mI1,mS2,mI2];
                         count=count+1;
-                    end;
-                end;
-            end;
-        end;
-    end;
-end;
+                    end
+                end
+            end
+        end
+    end
+end
 LMat=diag(BV1(:,1));
 
 % Spin coupled basis vectors BV2 S=S1+S2
 % |L mL S mS mIK mIRb> = |L mL S mS mI1 mI2>
 count=1;
-for n1=1:numel(LVec),
-    for n2=1:(2*LVec(n1)+1),
+for n1=1:numel(LVec)
+    for n2=1:(2*LVec(n1)+1)
         SVec=0:1;
-        for n3=1:numel(SVec),
-            for n4=1:(2*SVec(n3)+1),
-                for n5=1:NumNSpinStates1,
-                    for n6=1:NumNSpinStates2,
+        for n3=1:numel(SVec)
+            for n4=1:(2*SVec(n3)+1)
+                for n5=1:NumNSpinStates1
+                    for n6=1:NumNSpinStates2
                         mL=-LVec(n1)+(n2-1);
                         S=SVec(n3);
                         mS=-SVec(n3)+(n4-1);
@@ -207,24 +207,24 @@ for n1=1:numel(LVec),
                         mI2=-NSpin2+(n6-1);
                         BV2(count,:)=[LVec(n1),mL,S,mS,mI1,mI2];
                         count=count+1;
-                    end;
-                end;
-            end;
-        end;
-    end;
-end;
+                    end
+                end
+            end
+        end
+    end
+end
 
 % Spin-nucleus coupled basis vectors BV3 F1=S1+I1 and F2=S2+I2
 % |L mL FK mFK FRb mFRb> = |L mL F1 mF1 F2 mF2>
 count=1;
-for n1=1:numel(LVec),
-    for n2=1:(2*LVec(n1)+1),
+for n1=1:numel(LVec)
+    for n2=1:(2*LVec(n1)+1)
         FVec1=abs(Spin-NSpin1):(Spin+NSpin1);
-        for n3=1:numel(FVec1),
-            for n4=1:(2*FVec1(n3)+1),
+        for n3=1:numel(FVec1)
+            for n4=1:(2*FVec1(n3)+1)
                 FVec2=abs(Spin-NSpin2):(Spin+NSpin2);
-                for n5=1:numel(FVec2),
-                    for n6=1:(2*FVec2(n5)+1),
+                for n5=1:numel(FVec2)
+                    for n6=1:(2*FVec2(n5)+1)
                         mL=-LVec(n1)+(n2-1);
                         F1=FVec1(n3);
                         mF1=-FVec1(n3)+(n4-1);
@@ -232,25 +232,25 @@ for n1=1:numel(LVec),
                         mF2=-FVec2(n5)+(n6-1);
                         BV3(count,:)=[LVec(n1),mL,F1,mF1,F2,mF2];
                         count=count+1;
-                    end;
-                end;
-            end;
-        end;
-    end;
-end;
+                    end
+                end
+            end
+        end
+    end
+end
 
 % Coupled total spin vectors BV4 F1+F2=F
 % |L mL F1 F2 F mF>
 count=1;
-for n1=1:numel(LVec),
-    for n2=1:(2*LVec(n1)+1),
+for n1=1:numel(LVec)
+    for n2=1:(2*LVec(n1)+1)
          FVec1=abs(Spin-NSpin1):(Spin+NSpin1);
-         for n3=1:numel(FVec1),
+         for n3=1:numel(FVec1)
             FVec2=abs(Spin-NSpin2):(Spin+NSpin2);
-            for n4=1:numel(FVec2),
+            for n4=1:numel(FVec2)
                 FVec=abs(FVec1(n3)-FVec2(n4)):(FVec1(n3)+FVec2(n4));
-                for n5=1:numel(FVec),
-                    for n6=1:(2*FVec(n5)+1),
+                for n5=1:numel(FVec)
+                    for n6=1:(2*FVec(n5)+1)
                         L=LVec(n1);
                         mL=-L+(n2-1);
                         F1=FVec1(n3);
@@ -259,25 +259,25 @@ for n1=1:numel(LVec),
                         mF=-F+(n6-1);
                         BV4(count,:)=[L,mL,F1,F2,F,mF];
                         count=count+1;
-                    end;
-                end;
-            end;
-         end;
-    end;
-end;
+                    end
+                end
+            end
+         end
+    end
+end
 
 % Fully coupled basis vectors BV5 J=L+F=L+F1+F2=L+S1+S2+I1+I2
 % |L F1 F2 F J mJ>
 count=1;
-for n1=1:numel(LVec),
+for n1=1:numel(LVec)
     FVec1=abs(Spin-NSpin1):(Spin+NSpin1);
-    for n2=1:numel(FVec1),
+    for n2=1:numel(FVec1)
         FVec2=abs(Spin-NSpin2):(Spin+NSpin2);
-        for n3=1:numel(FVec2),
+        for n3=1:numel(FVec2)
             FVec=abs(FVec1(n2)-FVec2(n3)):(FVec1(n2)+FVec2(n3));
-            for n4=1:numel(FVec),
+            for n4=1:numel(FVec)
                 JVec=abs(FVec(n4)-LVec(n1)):(FVec(n4)+LVec(n1));
-                for n5=1:numel(JVec),
+                for n5=1:numel(JVec)
                     for n6=1:(2*JVec(n5)+1)
                         L=LVec(n1);
                         F1=FVec1(n2);
@@ -287,66 +287,66 @@ for n1=1:numel(LVec),
                         mJ=-JVec(n5)+(n6-1);
                         BV5(count,:)=[L,F1,F2,F,J,mJ];
                         count=count+1;
-                    end;
-                end;
-            end;
-        end;
-    end;
-end;
+                    end
+                end
+            end
+        end
+    end
+end
 
 % Basis of internal states, labelled from lowest energy BVint
 % |L mL Int1 Int2>
 count=1;
-for n1=1:numel(LVec),
-    for n2=1:(2*LVec(n1)+1),
-        for n3=1:(NumTSpinStates1),
-            for n4=1:(NumTSpinStates2),
+for n1=1:numel(LVec)
+    for n2=1:(2*LVec(n1)+1)
+        for n3=1:(NumTSpinStates1)
+            for n4=1:(NumTSpinStates2)
                     mL=-LVec(n1)+(n2-1);
                     BVint(count,:)=[LVec(n1),mL,n3,n4];
                     count=count+1;
-            end;
-        end;
-    end;
-end;
+            end
+        end
+    end
+end
 
 %% Assign mF values to internal states such that internal states are labelled in increasing energy
 FSpin1=NSpin1+[Spin,-Spin];
 FSpin2=NSpin2+[Spin,-Spin];
-if Ahfs1<0,
+if Ahfs1<0
 %     IntMValues(:,1)=(BVint(:,3)<=(2*FSpin1(1)+1)).*(BVint(:,3)-(FSpin1(1)+1))+(BVint(:,3)>(2*FSpin1(1)+1)).*(2*FSpin1(1)+2+FSpin1(2)-BVint(:,3));
     IntMValues(:,1)=(BVint(:,3)<=(2*FSpin1(1)+1)).*(BVint(:,3)-(FSpin1(1)+1))+(BVint(:,3)>(2*FSpin1(1)+1)).*((2*FSpin1(1)+1)+(FSpin1(2)+1)-BVint(:,3));
 else
     IntMValues(:,1)=(BVint(:,3)<=(2*FSpin1(2)+1)).*((FSpin1(2)+1)-BVint(:,3))+(BVint(:,3)>(2*FSpin1(2)+1)).*(BVint(:,3)-(2*FSpin1(2)+1)-(FSpin1(1)+1));
-end;
+end
 
-if Ahfs2<0,
+if Ahfs2<0
     IntMValues(:,2)=(BVint(:,4)<=(2*FSpin2(1)+1)).*(BVint(:,4)-(FSpin2(1)+1))+(BVint(:,4)>(2*FSpin2(1)+1)).*((2*FSpin2(1)+1)+(FSpin2(2)+1)-BVint(:,4));
 else
     IntMValues(:,2)=(BVint(:,4)<=(2*FSpin2(2)+1)).*((FSpin2(2)+1)-BVint(:,4))+(BVint(:,4)>(2*FSpin2(2)+1)).*(BVint(:,4)-(2*FSpin2(2)+1)-(FSpin2(1)+1));
-end;
+end
 
 
 %% Basis transformations
 
 % Transformation matrix from fully uncoupled to spin-coupled basis
 BT21=zeros(NumChannels);
-for row=1:NumChannels,
-    for col=1:NumChannels,
+for row=1:NumChannels
+    for col=1:NumChannels
         NSpin1Match=BV1(col,4)==BV2(row,5);
         NSpin2Match=BV1(col,6)==BV2(row,6);
         SpinSumMatch=(BV1(col,3)+BV1(col,5))==BV2(row,4);
         mLMatch=BV1(col,2)==BV2(row,2);
         LMatch=BV1(col,1)==BV2(row,1);
-        if NSpin1Match && NSpin2Match && SpinSumMatch && mLMatch && LMatch,
+        if NSpin1Match && NSpin2Match && SpinSumMatch && mLMatch && LMatch
             BT21(row,col)=ClebschGordan(Spin,Spin,BV2(row,3),BV1(col,3),BV1(col,5),BV2(row,4));
-        end;
-    end;
-end;
+        end
+    end
+end
 
 % Transformation matrix from fully uncoupled to spin-nucleus coupled basis
 BT31=zeros(NumChannels);
-for row=1:NumChannels,
-    for col=1:NumChannels,
+for row=1:NumChannels
+    for col=1:NumChannels
         SpinSumMatch1=(BV1(col,3)+BV1(col,4))==BV3(row,4);
         SpinSumMatch2=(BV1(col,5)+BV1(col,6))==BV3(row,6);
         mLMatch=BV1(col,2)==BV3(row,2);
@@ -355,9 +355,9 @@ for row=1:NumChannels,
             tmp1=ClebschGordan(Spin,NSpin1,BV3(row,3),BV1(col,3),BV1(col,4),BV3(row,4));
             tmp2=ClebschGordan(Spin,NSpin2,BV3(row,5),BV1(col,5),BV1(col,6),BV3(row,6));
             BT31(row,col)=tmp1.*tmp2;
-        end;
-    end;
-end;
+        end
+    end
+end
 
 % Transformation matrix from spin-coupled basis to spin-nucleus coupled
 % basis
@@ -365,35 +365,35 @@ BT32=BT31*(BT21');
 
 % Transformation matrix from spin-nucleus basis to total spin coupled
 BT43=zeros(NumChannels);
-for row=1:NumChannels,
-    for col=1:NumChannels,
+for row=1:NumChannels
+    for col=1:NumChannels
         mLMatch=BV3(col,2)==BV4(row,2);
         LMatch=BV3(col,1)==BV4(row,1);
         FMatch1=BV3(col,3)==BV4(row,3);
         FMatch2=BV3(col,5)==BV4(row,4);
         FMatch=FMatch1 && FMatch2;
         mFSumMatch=(BV3(col,4)+BV3(col,6))==BV4(row,6);
-        if mLMatch && LMatch && mFSumMatch && FMatch,
+        if mLMatch && LMatch && mFSumMatch && FMatch
             BT43(row,col)=ClebschGordan(BV3(col,3),BV3(col,5),BV4(row,5),BV3(col,4),BV3(col,6),BV4(row,6));
-        end;
-    end;
-end;
+        end
+    end
+end
 
 % Transformation matrix from total-spin coupled basis to fully coupled
 BT54=zeros(NumChannels);
-for row=1:NumChannels,
-    for col=1:NumChannels,
+for row=1:NumChannels
+    for col=1:NumChannels
         LMatch=BV4(col,1)==BV5(row,1);
         FMatch1=BV4(col,3)==BV5(row,2);
         FMatch2=BV4(col,4)==BV5(row,3);        
         FTotalMatch=BV4(col,5)==BV5(row,4);
         FMatch=FMatch1 && FMatch2 && FTotalMatch;
         mJSumMatch=(BV4(col,2)+BV4(col,6))==BV5(row,6);
-        if LMatch && FMatch && mJSumMatch,
+        if LMatch && FMatch && mJSumMatch
             BT54(row,col)=ClebschGordan(BV4(col,1),BV4(col,5),BV5(row,5),BV4(col,2),BV4(col,6),BV5(row,6));
-        end;
-    end;
-end;
+        end
+    end
+end
 
 % Transformation matrix from electron spin-coupled basis to total spin coupled
 BT42=BT43*BT32;
@@ -408,32 +408,32 @@ function Lstr=ProcessLstr(LVec)
 % So LVec=[0:2,5,8:10] becomes 'L=0-2,5,8-10'
 
 LVec=sort(unique(LVec));
-if numel(LVec)==2,
-    if diff(LVec)==1,
+if numel(LVec)==2
+    if diff(LVec)==1
         Lstr=['L=',num2str(LVec(1)),'-',num2str(LVec(2))];
     else
         Lstr=['L=',num2str(LVec(1)),',',num2str(LVec(2))];
-    end;
+    end
 else
     Lstr=['L=',num2str(LVec(1))];
-end;
+end
 
-for nn=2:numel(LVec)-1,
+for nn=2:numel(LVec)-1
     dL=diff(LVec(nn-1:nn+1));
     if dL(1)==1 && dL(2)~=1
         Lstr=[Lstr,'-',num2str(LVec(nn))];
-    elseif dL(1)~=1 && dL(2)==1,
+    elseif dL(1)~=1 && dL(2)==1
         Lstr=[Lstr,',',num2str(LVec(nn))];
-    elseif dL(1)~=1 && dL(2)~=1,
+    elseif dL(1)~=1 && dL(2)~=1
         Lstr=[Lstr,',',num2str(LVec(nn))];
-    end;
+    end
     
-    if nn==numel(LVec)-1,
-        if dL(2)==1,
+    if nn==numel(LVec)-1
+        if dL(2)==1
            Lstr=[Lstr,'-',num2str(LVec(nn+1))];
         else
             Lstr=[Lstr,',',num2str(LVec(nn+1))];
-        end;            
-    end;
-end;
+        end;           
+    end
+end
 end
