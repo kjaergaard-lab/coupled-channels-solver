@@ -125,6 +125,24 @@ switch AtomPair
         gI_1=gI_Rb85;
         gI_2=gI_Rb85;
         
+    case '85Rb87Rb'
+        PotentialFunc=@RbRbPotentialDD;
+
+        %Angular momentum settings
+        Spin=0.5;   %Electron spin
+        NSpin1=2.5;   %Spin of first atom
+        NSpin2=1.5; %Spin of second atom
+
+        %Set constant values
+        IdenticalParticles=0;   %Important parameter for identical particles.  +1 for bosons, -1 for fermions, 0 for distinct particles
+        mass=mRb85*mRb/(mRb85+mRb);
+        Ahfs1=Ahfs_Rb85;
+        Ahfs2=Ahfs_Rb;
+        gS_1=gS_Rb85;
+        gS_2=gS_Rb;
+        gI_1=gI_Rb85;
+        gI_2=gI_Rb;
+        
     case '39K39K'
         PotentialFunc=@KKPotentialDD;
 
