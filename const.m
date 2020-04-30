@@ -22,6 +22,8 @@ classdef const < handle
         gS=2.0023193043622;
         alpha=1/137.035999074;
         EHartree=const.hbar*const.c*const.alpha/const.aBohr;
+        
+        g = 9.81;   %m/s^2
     end
     
     methods(Static)

@@ -1,4 +1,4 @@
-function Output=MultiChannel(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,DipoleFlag,IntParams)
+function [Output,wf]=MultiChannel(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,DipoleFlag,IntParams)
 % MultiChannel computes the scattering properties of a pair of alkali metal
 % atoms
 %   Usage 1: MultiChannel(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,DipoleFlag,IntParams)
@@ -92,6 +92,9 @@ end
 if ~isfield(IntParams,'ParSet')
     IntParams.ParSet=1;
 end
+if ~isfield(IntParams,'getWavefunctions')
+    IntParams.getWavefunctions = false;
+end
 
 %% Subspace restriction
 InitStateInt=FindState(BVint,InitStateLabel);
@@ -177,21 +180,35 @@ end
 
 %% Loop over inputs
 disp('Basis sets constructed.  Starting integration');
+getWavefunctions = IntParams.getWavefunctions;
 if IntParams.ParSet==1
     parfor mm=1:Nruns
-        S(:,:,mm)=ManolopoulosIntegration(LMat,SpinEx,Hdd,Hint0,E(:,:,mm),BT1int(:,:,mm),BT2int(:,:,mm),IntParams,BlockSize,Scale,BasisSetFile);
+        if getWavefunctions
+            [S(:,:,mm),wf{mm}]=ManolopoulosIntegration(LMat,SpinEx,Hdd,Hint0,E(:,:,mm),BT1int(:,:,mm),BT2int(:,:,mm),IntParams,BlockSize,Scale,BasisSetFile);
+        else
+            S(:,:,mm)=ManolopoulosIntegration(LMat,SpinEx,Hdd,Hint0,E(:,:,mm),BT1int(:,:,mm),BT2int(:,:,mm),IntParams,BlockSize,Scale,BasisSetFile);
+        end
     end
 else
     for mm=1:Nruns
-        S(:,:,mm)=ManolopoulosIntegration(LMat,SpinEx,Hdd,Hint0,E(:,:,mm),BT1int(:,:,mm),BT2int(:,:,mm),IntParams,BlockSize,Scale,BasisSetFile);
+        if getWavefunctions
+            [S(:,:,mm),wf{mm}]=ManolopoulosIntegration(LMat,SpinEx,Hdd,Hint0,E(:,:,mm),BT1int(:,:,mm),BT2int(:,:,mm),IntParams,BlockSize,Scale,BasisSetFile);
+        else
+            S(:,:,mm)=ManolopoulosIntegration(LMat,SpinEx,Hdd,Hint0,E(:,:,mm),BT1int(:,:,mm),BT2int(:,:,mm),IntParams,BlockSize,Scale,BasisSetFile);
+        end
     end
 end
 
 %% Calculate output quantities
-
+Output.BVint = BVint;
 T=S-repmat(IR,[1,1,Nruns]); %T-matrix is just S-1
 if IdenticalParticles~=0
-    [Ssym,BVSymInt]=SymmetrizeSMatrixArbL(S,BVint,IdenticalParticles);
+    [Ssym,BVSymInt,ia]=SymmetrizeSMatrixArbL(S,BVint,IdenticalParticles);
+    if IntParams.getWavefunctions
+        for nn=1:numel(wf)
+            wf{nn}.u = wf{nn}.u(ia,:);
+        end
+    end
     tmp=size(Ssym);
     if Nruns==1
         tmp(3) = 1;
@@ -231,7 +248,7 @@ else
         T2=shiftdim(T,2);
         T2=squeeze(T2(:,:,OutIdx));
     end
-    Output.BVint=BVint;
+%     Output.BVint=BVint;
     Output.S=S;
     Output.T=T;
 end
@@ -244,12 +261,14 @@ Output.mass=mass;
 Output.Ein=Ein;
 Output.Bin=Bin;
 
-sm = ScatteringMatrix(S,BVint,IdenticalParticles,InitStateLabel);
-sm.mass = mass;
-sm.E = Ein;
-sm.B = Bin;
+if size(S,3)>1
+    sm = ScatteringMatrix(S,BVint,IdenticalParticles,InitStateLabel);
+    sm.mass = mass;
+    sm.E = Ein;
+    sm.B = Bin;
 
-Output = sm;
+    Output = sm;
+end
 
 if numel(OutputFile)>0
     save(OutputFile);
@@ -257,7 +276,7 @@ end
 
 end
 
-function S=ManolopoulosIntegration(LMat,SpinEx,Hdd,H0,E,BT1int,BT2int,IntParams,BlockSize,Scale,BasisFile)
+function [S,wf]=ManolopoulosIntegration(LMat,SpinEx,Hdd,H0,E,BT1int,BT2int,IntParams,BlockSize,Scale,BasisFile)
 
 %% Preamble
 rMin=IntParams.rMin;
@@ -287,6 +306,11 @@ EPot=E2;
 H0Pot=H02;
 
 Y=sqrt(PotentialFunc(rMin,Scale,LMat,SpinExPot,HddPot,H0Pot)-EPot).*IR; %Initial condition
+if nargout>1
+    unew = 1e-20*ones(NSubChannels,1);
+    uout = unew;
+    rout = rMin;
+end
 
 %% Calculate adiabatic potentials
 r=linspace(rMin,rMax,5e3);
@@ -319,6 +343,11 @@ for jj=1:NumSegments
     %if N==1,error('Number of steps = 1');end;
     dr=diff(r2(1:2));
     h=dr/2;
+    
+    if nargout>1
+        u = zeros(NSubChannels,N);
+        u(:,1) = unew;
+    end
 
     M=PotentialFunc(r2,Scale,LMat,SpinExPot,HddPot,H0Pot)-repmat(EPot,[1,1,N]);
     M2=PotentialFunc(r2+h,Scale,LMat,SpinExPot,HddPot,H0Pot)-repmat(EPot,[1,1,N]);
@@ -337,9 +366,27 @@ for jj=1:NumSegments
         Qa=h/3*(M(:,:,nn)-Mref);
         Qc=4./h*((IR-h.^2/6.*(M2(:,:,nn)-Mref))\IR)-4./h*IR;
         Qb=h/3*(M(:,:,nn+1)-Mref);
-
-        tmp=(y1+Qc)-(y2/(Y+y1+Qa))*y2;
-        Y=(y1+Qb)-(y2/(tmp+y1+Qc))*y2;  
+        
+        if nargout>1
+            tmp = (y1+Qc)-(y2/(Y+y1+Qa))*y2;
+            unew = (y2\(Y+y1+Qa))*unew;
+            Y = (y1+Qb)-(y2/(tmp+y1+Qc))*y2;
+            unew = (y2\(tmp+y1+Qc))*unew;
+            if any(abs(unew)>1e30)
+                u = u/norm(unew);
+                uout = uout/norm(unew);
+                unew = unew/norm(unew);
+            end
+            u(:,nn+1) = unew;
+        else
+            tmp=(y1+Qc)-(y2/(Y+y1+Qa))*y2;
+            Y=(y1+Qb)-(y2/(tmp+y1+Qc))*y2;  
+        end
+    end
+    
+    if nargout>1
+        uout = [uout u(:,2:end)]; %#ok<AGROW>
+        rout = [rout r2(2:end)]; %#ok<AGROW>
     end
 
     if BasisChangeFlag==false && end_pos>=10
@@ -349,6 +396,12 @@ for jj=1:NumSegments
         H0Pot=H0Int;
         EPot=E;
         BasisChangeFlag=true;
+        if nargout>1
+            unew = BT2int'*unew;
+            for kk=1:size(uout,2)
+                uout(:,kk) = BT2int'*uout(:,kk);
+            end
+        end
     end
 
 end
@@ -363,6 +416,12 @@ Y=Y(idx,idx);
 Stmp=(k*RiccatiBessel(b,k,LMatR2,2,1)-RiccatiBessel(b,k,LMatR2,2,0)*Y)/(k*RiccatiBessel(b,k,LMatR2,1,1)-RiccatiBessel(b,k,LMatR2,1,0)*Y);
 S=IR;
 S(idx,idx)=Stmp;
+
+if nargout>1
+%     rout(end+1) = b;
+    wf.r = rout;
+    wf.u = uout;
+end
 
 
 end

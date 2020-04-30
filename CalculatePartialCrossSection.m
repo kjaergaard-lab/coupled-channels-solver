@@ -1,4 +1,4 @@
-function cross_sec=CalculatePartialCrossSection(T,BV,k,InitState,FinalState)
+function cross_sec=CalculatePartialCrossSection(T,BV,k,InitState,FinalState,identical)
 % CalculatePartialCrossSection Calculates partial cross sections 
 %   cross_sec=CalculatePartialCrossSection(T,BV,k,InitState,FinalState) with T the
 %   full T-matrix, BV the basis vectors of T, k the wavenumber, and
@@ -35,8 +35,11 @@ for n1=1:numel(InLRange)
         end
     end
 end
+if nargin <6
+    identical = 0;
+end
 
-cross_sec=pi./k.^2.*real(cross_sec);
+cross_sec = (1+identical*(FinalState(1)==FinalState(2)))*pi./k.^2.*real(cross_sec);
 
 
 

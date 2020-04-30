@@ -1,4 +1,4 @@
-function [S,BVSymInt]=SymmetrizeSMatrixArbL(Sin,BVint,SymType)
+function [S,BVSymInt,ia]=SymmetrizeSMatrixArbL(Sin,BVint,SymType)
 % SymmetrizeSMatrixArbL symmetrizes S-matrix for identical particles
 % [S,BVSymInt]=SymmetrizeSMatrixArbL(Sin,BVint,SymType) Sin is input S
 % matrix, BVint is input interal basis vectors, and SymType=1,-1 defines
@@ -11,7 +11,7 @@ tmp=zeros(size(BVint));
 for nn=1:NChannels
     tmp(nn,:)=[BVint(nn,1:2) BVint(nn,(idx(nn,:)==1)*3+(idx(nn,:)==2)*4)];
 end
-BVSymInt=unique(tmp,'rows');
+[BVSymInt,ia]=unique(tmp,'rows');
 NSymStates=size(BVSymInt,1);
 S=zeros(NSymStates,NSymStates,size(Sin,3));
 

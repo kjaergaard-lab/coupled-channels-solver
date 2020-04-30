@@ -1,7 +1,7 @@
 function U=RbBOPotentialsv2(r,sel)
 % v2 update uses retardation values from PRA 50(4) 3096
 % Energies in cm^-1, lengths in angstroms
-if sel==0,
+if sel==0
     Rinner=3.126;
     Router=11;
 
@@ -46,29 +46,32 @@ if sel==0,
     x=(r-Rm)./(r+b.*Rm);
     Nterms=numel(a);
     Uir=zeros(size(r));
-    for nn=1:Nterms,
+    for nn=1:Nterms
         Uir=Uir+a(nn).*x.^(nn-1);
-    end;
+    end
 
     %% Outer Region
-    Uinf=0;
-    C6=0.2270032e8;
-    C8=0.7782886e9;
-    C10=0.2868869e11;
-    C26=0.2819810e26;
-    Aex=0.1317786e5;
-    Gamma=5.317689;
-    Beta=2.093816;
-    
-    rtmp=r(:);
-    rtmp=rtmp(rtmp>Router);
-    [f6,f8,f10]=RbRetardation(rtmp);
-    f6=reshape([zeros(numel(r)-numel(rtmp),1);f6],size(r));
-    f8=reshape([zeros(numel(r)-numel(rtmp),1);f8],size(r));
-    f10=reshape([zeros(numel(r)-numel(rtmp),1);f10],size(r));
-
-%     Uouter=Uinf-C6./r.^6-C8./r.^8-C10./r.^10-C26./r.^26-Aex.*r.^Gamma.*exp(-Beta.*r);
-    Uouter=Uinf-C6.*f6./r.^6-C8.*f8./r.^8-C10.*f10./r.^10-C26./r.^26-Aex.*r.^Gamma.*exp(-Beta.*r);
+%     Uinf=0;
+%     C6=0.2270032e8;
+%     C8=0.7782886e9;
+%     C10=0.2868869e11;
+%     C26=0.2819810e26;
+%     Aex=0.1317786e5;
+%     Gamma=5.317689;
+%     Beta=2.093816;
+%     
+%     rtmp=r(:);
+%     rtmp=rtmp(rtmp>Router);
+%     [f6,f8,f10]=RbRetardation(rtmp);
+%     f6=reshape([zeros(numel(r)-numel(rtmp),1);f6],size(r));
+%     f8=reshape([zeros(numel(r)-numel(rtmp),1);f8],size(r));
+%     f10=reshape([zeros(numel(r)-numel(rtmp),1);f10],size(r));
+% %     f6=reshape([ones(numel(r)-numel(rtmp),1);f6],size(r));
+% %     f8=reshape([ones(numel(r)-numel(rtmp),1);f8],size(r));
+% %     f10=reshape([ones(numel(r)-numel(rtmp),1);f10],size(r));
+% 
+% %     Uouter=Uinf-C6./r.^6-C8./r.^8-C10./r.^10-C26./r.^26-Aex.*r.^Gamma.*exp(-Beta.*r);
+%     Uouter=Uinf-C6.*f6./r.^6-C8.*f8./r.^8-C10.*f10./r.^10-C26./r.^26-Aex.*r.^Gamma.*exp(-Beta.*r);
 else
     Rinner=5.07;
     Router=11;
@@ -101,34 +104,60 @@ else
     x=(r-Rm)./(r+b.*Rm);
     Nterms=numel(a);
     Uir=zeros(size(r));
-    for nn=1:Nterms,
+    for nn=1:Nterms
         Uir=Uir+a(nn).*x.^(nn-1);
-    end;
+    end
 
     %% Outer Region
-    Uinf=0;
-    C6=0.2270032e8;
-    C8=0.7782886e9;
-    C10=0.2868869e11;
-    C26=0.2819810e26;
-    Aex=0.1317786e5;
-    Gamma=5.317689;
-    Beta=2.093816;
-    
-    rtmp=r(:);
-    rtmp=rtmp(rtmp>Router);
-    [f6,f8,f10]=RbRetardation(rtmp);
+%     Uinf=0;
+%     C6=0.2270032e8;
+%     C8=0.7782886e9;
+%     C10=0.2868869e11;
+%     C26=0.2819810e26;
+%     Aex=0.1317786e5;
+%     Gamma=5.317689;
+%     Beta=2.093816;
+%     
+%     rtmp=r(:);
+%     rtmp=rtmp(rtmp>Router);
+%     [f6,f8,f10]=RbRetardation(rtmp);
+% %     f6=reshape([zeros(numel(r)-numel(rtmp),1);f6],size(r));
+% %     f8=reshape([zeros(numel(r)-numel(rtmp),1);f8],size(r));
+% %     f10=reshape([zeros(numel(r)-numel(rtmp),1);f10],size(r));
+%     f6=reshape([ones(numel(r)-numel(rtmp),1);f6],size(r));
+%     f8=reshape([ones(numel(r)-numel(rtmp),1);f8],size(r));
+%     f10=reshape([ones(numel(r)-numel(rtmp),1);f10],size(r));
+% 
+% %     Uouter=Uinf-C6./r.^6-C8./r.^8-C10./r.^10-C26./r.^26+Aex.*r.^Gamma.*exp(-Beta.*r);
+%     Uouter=Uinf-C6.*f6./r.^6-C8.*f8./r.^8-C10.*f10./r.^10-C26./r.^26+Aex.*r.^Gamma.*exp(-Beta.*r);
+end
+
+%% Outer Region
+Uinf=0;
+C6=0.2270032e8;
+C8=0.7782886e9;
+C10=0.2868869e11;
+C26=0.2819810e26;
+Aex=0.1317786e5;
+Gamma=5.317689;
+Beta=2.093816;
+
+rtmp=r(:);
+rtmp=rtmp(rtmp>Router);
+[f6,f8,f10]=RbRetardation(rtmp);
+if numel(r)==1 || (r(2)-r(1))>0
     f6=reshape([ones(numel(r)-numel(rtmp),1);f6],size(r));
     f8=reshape([ones(numel(r)-numel(rtmp),1);f8],size(r));
     f10=reshape([ones(numel(r)-numel(rtmp),1);f10],size(r));
-
-%     Uouter=Uinf-C6./r.^6-C8./r.^8-C10./r.^10-C26./r.^26+Aex.*r.^Gamma.*exp(-Beta.*r);
-    Uouter=Uinf-C6.*f6./r.^6-C8.*f8./r.^8-C10.*f10./r.^10-C26./r.^26+Aex.*r.^Gamma.*exp(-Beta.*r);
-end;
+else
+    f6=reshape([f6;ones(numel(r)-numel(rtmp),1)],size(r));
+    f8=reshape([f8;ones(numel(r)-numel(rtmp),1)],size(r));
+    f10=reshape([f10;ones(numel(r)-numel(rtmp),1)],size(r));
+end
+Uouter=Uinf-C6.*f6./r.^6-C8.*f8./r.^8-C10.*f10./r.^10-C26./r.^26+(2*sel-1)*Aex.*r.^Gamma.*exp(-Beta.*r);
 
 %% All together
 U=Uinner.*(r<Rinner) + Uir.*((r>=Rinner) & (r<=Router)) + Uouter.*(r>Router);
-
 
 end
 
