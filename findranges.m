@@ -1,44 +1,41 @@
-function Eout = findranges(x,Vfunc,Ein,options)
+function Eout = findranges(x,Vfunc,Ein,recurse,iter,opt)
 
-%% Default values
-if nargin<4 || ~isfield(options,'recurse')
-    options.recurse = true;
+if nargin<6
+    opt = boundoptions;
+elseif ~isa(opt,'boundoptions')
+    error('Options argument ''opt'' must be of type boundoptions');
 end
-if nargin<4 || ~isfield(options,'iter')
-    options.iter = 4;
-end
-options.direction = 1;
 
-Ein = Ein(:);
-[~,~,nodes(1)] = manolopoulos(x,Vfunc,Ein(1),options);
-[~,~,nodes(2)] = manolopoulos(x,Vfunc,Ein(2),options);
+opt.direction = 1;
+
+Ein = sort(Ein(:),'descend');
+[~,~,nodes(1)] = manolopoulos(x,Vfunc,Ein(1),opt);
+[~,~,nodes(2)] = manolopoulos(x,Vfunc,Ein(2),opt);
 numBound = abs(nodes(1)-nodes(2));
 
 Eout = [];
 if numBound == 0
     Eout = [];
-elseif numBound == 1 && options.recurse
-    options2 = options;
-    options2.recurse = false;
-    for nn=1:options.iter
+elseif numBound == 1 && recurse
+    for nn=1:iter
         Emid = (Ein(1)+Ein(2))/2;
-        Enew = findranges(x,Vfunc,[Ein(1),Emid],options2);
+        Enew = findranges(x,Vfunc,[Ein(1),Emid],false,iter,opt);
         if ~isempty(Enew)
             Ein = Enew;
         else
-            Ein = findranges(x,Vfunc,[Emid,Ein(2)],options2);
+            Ein = findranges(x,Vfunc,[Emid,Ein(2)],false,iter,opt);
         end
     end
     Eout = Ein;
-elseif numBound == 1 && ~options.recurse
+elseif numBound == 1 && ~recurse
     Eout = Ein;
 else
     Emid = (Ein(1)+Ein(2))/2;
-    Enew = findranges(x,Vfunc,[Ein(1),Emid],options);
+    Enew = findranges(x,Vfunc,[Ein(1),Emid],recurse,iter,opt);
     if ~isempty(Enew)
         Eout = [Eout,Enew];
     end
-    Enew = findranges(x,Vfunc,[Emid,Ein(2)],options);
+    Enew = findranges(x,Vfunc,[Emid,Ein(2)],recurse,iter,opt);
     if ~isempty(Enew)
         Eout = [Eout,Enew];
     end

@@ -1,4 +1,4 @@
-classdef boundoptions < handle
+classdef boundoptions
     properties
         stopAtRoot  %Stop integration at a root in the log-derivative
         stopAtR     %Stop at a particular value of r
@@ -24,8 +24,8 @@ classdef boundoptions < handle
     
     methods
         function opt = boundoptions(varargin)
-            opt.setDefaults;
-            opt.set(varargin{:});
+            opt = opt.setDefaults;
+            opt = opt.set(varargin{:});
         end
         
         function opt = setDefaults(opt)

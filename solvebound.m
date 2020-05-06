@@ -1,28 +1,18 @@
-function [Eout,u] = solvebound(r,Vfunc,E,options)
+function [Eout,u,nodes] = solvebound(r,Vfunc,E,opt)
 
-
-
-narg = 4;
-
-if nargin<narg || ~isfield(options,'maxIter')
-    options.maxIter = 100;
-end
-if nargin<narg || ~isfield(options,'tol')
-    options.tol = 1e-6;
-end
-if nargin<narg || ~isfield(options,'debug')
-    options.debug = 0;
-end
-if nargin<narg || ~isfield(options,'pauseTime')
-    options.pauseTime = 0.1;
+%% Parse arguments
+if nargin<4
+    opt = boundoptions;
+elseif ~isa(opt,'boundoptions')
+    error('Options argument ''opt'' must be of type boundoptions');
 end
 
 
 E = sort(E);
-match = [calcBoundSolution(r,Vfunc,E(1),options),calcBoundSolution(r,Vfunc,E(2),options)];
+match = [calcBoundSolution(r,Vfunc,E(1),opt),calcBoundSolution(r,Vfunc,E(2),opt)];
 side = 0;
 
-for nn=1:options.maxIter
+for nn=1:opt.iter
     %%
     if sign(match(1)) == sign(match(2))
         Enew = (E(1)+E(2))/2;
@@ -32,13 +22,15 @@ for nn=1:options.maxIter
         method = 'secant';
     end
     
-    if options.debug
-        [mnew,~,debugOut] = calcBoundSolution(r,Vfunc,Enew,options);
+    if opt.debug
+        [mnew,~,debugOut] = calcBoundSolution(r,Vfunc,Enew,opt);
     else
-        mnew = calcBoundSolution(r,Vfunc,Enew,options);
+        mnew = calcBoundSolution(r,Vfunc,Enew,opt);
     end
     
-    if abs(mnew)<options.tol
+    err = abs(mnew);
+    
+    if err<opt.tol
         break;
     elseif strcmp(method,'bisect')
         amnew = abs(mnew);
@@ -87,33 +79,36 @@ for nn=1:options.maxIter
         end
     end
     
-    if options.debug
+    if opt.debug
         figure(1);clf;
 %         plot(x,u,'.-');
         plot(debugOut.rL,debugOut.uL,'.-');
         hold on;
         plot(debugOut.rR,debugOut.uR,'.-');
         hold off;
-%         xlim(min(debugOut.xR)+[-0.1,0.1]);
-        fprintf(1,'Iter: %02d, Error = %.5e, Energy = %.5f\n',nn,abs(mnew),Enew);
-        pause(options.pauseTime);
+        xlim(min(debugOut.rR)+[-1,1]);
+%         xlim([8,13]);
+        fprintf(1,'Iter: %02d, Error = %.5e, Energy = %.5f\n',nn,err,Enew);
+        pause(opt.pauseDelay);
     end
     
 end
 
 Eout = Enew;
-if ~options.debug || nargout>1
-    [~,u,debugOut] = calcBoundSolution(r,Vfunc,Eout,options);
+if ~opt.debug || nargout>1
+    [~,nodes,debugOut] = calcBoundSolution(r,Vfunc,Eout,opt);
+    u = debugOut.u;
+    u = u./sqrt(sum(u(1:end-1).^2.*diff(r)));
 end
 
-if options.debug
+if opt.debug
     cla;
     plot(debugOut.rL,debugOut.uL,'.-');
     hold on;
     plot(debugOut.rR,debugOut.uR,'.-');
     hold off;
-    fprintf(1,'Iter: %02d, Error = %.3e, Energy = %.3f\n',nn,abs(mnew),Enew);
-    pause(options.pauseTime);
+    fprintf(1,'Iter: %02d, Error = %.5e, Energy = %.5f\n',nn,err,Enew);
+    pause(opt.pauseDelay);
 end
 
 

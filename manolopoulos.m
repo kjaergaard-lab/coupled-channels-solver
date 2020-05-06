@@ -1,46 +1,13 @@
-function varargout = manolopoulos(r,Vfunc,E,varargin)
-
-%% Default values
-opt.stopAtRoot = false;
-opt.stopAtR = false;
-opt.stopAfterR = false;
-opt.stopR = 5;
-opt.direction = 1;
-opt.makeOutput = false;
+function varargout = manolopoulos(r,Vfunc,E,opt)
 
 %% Parse arguments
-if numel(varargin)==1 && isa(varargin{1},'struct')
-    options = flattenstruct(varargin{1});
-elseif numel(varargin)>0 && mod(numel(varargin),2)~=0
-    error('Must supply name/value pairs for additional arguments');
-else
-    options = varargin;
+if nargin<4
+    opt = boundoptions;
+elseif ~isa(opt,'boundoptions')
+    error('Options argument ''opt'' must be of type boundoptions');
 end
 
-for nn=1:2:numel(options)
-    if ~ischar(options{nn})
-        error('Optional argument %d is not a string',nn);
-    else
-        v = options{nn+1};
-        switch lower(options{nn})
-            case 'stopatroot'
-                opt.stopAtRoot = v;
-            case 'stopatr'
-                opt.stopAtR = v;
-            case 'stopafterr'
-                opt.stopAfterR = v;
-            case 'stopr'
-                opt.stopR = v;
-            case 'direction'
-                opt.direction = v;
-            case 'makeoutput'
-                opt.makeOutput = v;
-%             otherwise
-%                 error('Option %s not known',options{nn});
-        end
-    end
-end
-
+%% Prep
 if opt.direction>0
     Ynew = 1e20;
     unew = 1e-20;
@@ -51,7 +18,7 @@ elseif opt.direction<0
 end
 Yold = Ynew;
 
-if opt.makeOutput
+if opt.output
     Y = zeros(numel(r),1);
     Y(1) = Ynew;
     u = zeros(numel(r),1);
@@ -63,6 +30,8 @@ dr = diff(r);
 h = dr/2;
 M = Vfunc(r)-E;
 M2 = Vfunc(r(1:end-1)+h)-E;
+
+%% Solve
 for nn=1:numel(r)-1
 %     dr = r(nn+1)-r(nn);
 %     h = dr/2;
@@ -89,9 +58,13 @@ for nn=1:numel(r)-1
     utmp = (Ynew+y1+Qa)/y2*unew;
     Ynew = (y1+Qb)-y2/(Ytmp+y1+Qc)*y2;
     unew = (Ytmp+y1+Qc)/y2*utmp;
-    if makeOutput
+    if opt.output
         Y(nn+1) = Ynew;
         u(nn+1) = unew;
+        if abs(unew)>1e30
+            u = u/1e30;
+            unew = unew/1e30;
+        end
     end
     
     if sign(Yold) ~= sign(Ynew)
@@ -117,7 +90,7 @@ for nn=1:numel(r)-1
     end
 end
 
-if opt.makeOutput
+if opt.output
     Y = Y(1:(nn+1));
     u = u(1:(nn+1));
 end
@@ -126,7 +99,7 @@ end
 varargout{1} = Ynew;
 varargout{2} = r(nn+1);
 varargout{3} = nodes;
-if opt.makeOutput && nargout>3
+if opt.output && nargout>3
     varargout{4} = r(1:(nn+1));
     varargout{5} = Y;
     varargout{6} = u;
