@@ -8,78 +8,127 @@ elseif ~isa(opt,'boundoptions')
 end
 
 %% Prep
+I = eye(size(Vfunc(r(1))));
+Nch = size(I,1);
 if opt.direction>0
-    Ynew = 1e20;
-    unew = 1e-20;
+    Ynew = sqrt(Vfunc(r(1))-E*I);
 elseif opt.direction<0
     r = flip(r);
     Ynew = -sqrt(Vfunc(r(1))-E);
-    unew = 1e-20;
 end
-Yold = Ynew;
+% Yold = Ynew;
+eigNew = eig(Ynew);
+negEigNew = sum(eigNew<0);
+detNew = prod(eigNew);
+eigOld = eigNew;
+negEigOld = negEigNew;
+detOld = detNew;
+[~,minIndex] = min(abs(eigNew));
+minEigNew = eigNew(minIndex);
+[~,maxIndex] = max(abs(eigNew));
+maxEigNew = eigNew(maxIndex);
+maxEigOld = maxEigNew;
+
+% detOld = det(Ynew);
+% detNew = detOld;
 
 if opt.output
-    Y = zeros(numel(r),1);
-    Y(1) = Ynew;
-    u = zeros(numel(r),1);
-    u(1) = unew;
+    Y = zeros(Nch,Nch,numel(r));
+    Y(:,:,1) = Ynew;
+    Zout = zeros(Nch,Nch,numel(r));
 end
 
-nodes = 0;
+nodes = zeros(numel(r),1);
+antinodes = zeros(numel(r),1);
+dbg.test = zeros(numel(r),1);
 dr = diff(r);
 h = dr/2;
-M = Vfunc(r)-E;
-M2 = Vfunc(r(1:end-1)+h)-E;
+Epot = repmat(E*I,1,1,numel(r));
+M = Vfunc(r)-Epot;
+M2 = Vfunc(r(1:end-1)+h)-Epot(:,:,1:end-1);
 
 %% Solve
 for nn=1:numel(r)-1
-%     dr = r(nn+1)-r(nn);
-%     h = dr/2;
-    p2 = M2(nn);
+    p2 = diag(M2(:,:,nn));
     p = sqrt(abs(p2));
-    if p2 == 0
-        y1 = 1/h(nn);
-        y2 = 1/h(nn);
-    else
-        y1 = p.*coth(p*h(nn)).*(p2>0)+p.*cot(p*h(nn)).*(p2<0);
-        y2 = p.*csch(p*h(nn)).*(p2>0)+p.*csc(p*h(nn)).*(p2<0);
-    end
-%     y1 = 1/h*(cothc(p*h).*(p2>0)+cotc(p*h).*(p2<0));
-%     y2 = 1/h*(cschc(p*h).*(p2>0)+cscc(p*h).*(p2<0));
+    y1 = p.*coth(p*h(nn)).*(p2>0)+p.*cot(p*h(nn)).*(p2<0)+1./h(nn).*(p2==0);
+    y2 = p.*csch(p*h(nn)).*(p2>0)+p.*csc(p*h(nn)).*(p2<0)+1./h(nn).*(p2==0);
     
-    Qa = h(nn)/3*(M(nn)-p2);
-%         Qc = 4/(h*(1-h^2/6*(M2(nn)-p2)))-4/h;
-    Qc = 0;
-    Qb = h(nn)/3*(M(nn+1)-p2);
+    y1 = diag(y1);
+    y2 = diag(y2);
+    Mref = diag(p2);
+    
+    Qa = h(nn)/3*(M(:,:,nn)-Mref);
+    Qc = 4/h(nn)*((I-h(nn)^2/6*(M2(:,:,nn)-Mref))\I)-4/h(nn)*I;
+    Qb = h(nn)/3*(M(:,:,nn+1)-Mref);
 
-    Yold2 = Yold;
-    Yold = Ynew;
-    Ytmp = (y1+Qc)-y2/(Ynew+y1+Qa)*y2;
-    utmp = (Ynew+y1+Qa)/y2*unew;
-    Ynew = (y1+Qb)-y2/(Ytmp+y1+Qc)*y2;
-    unew = (Ytmp+y1+Qc)/y2*utmp;
-    if opt.output
-        Y(nn+1) = Ynew;
-        u(nn+1) = unew;
-        if abs(unew)>1e30
-            u = u/1e30;
-            unew = unew/1e30;
+    eigOld2 = eigOld;
+    negEigOld2 = negEigOld;
+    detOld2 = detOld;
+    eigOld = eigNew;
+    negEigOld = negEigNew;
+    detOld = detNew;
+    minEigOld = minEigNew;
+    maxEigOld2 = maxEigOld;
+    maxEigOld = maxEigNew;
+
+    Zac = (Ynew+y1+Qa)\y2;
+    Yc = (y1+Qc)-y2*Zac;
+    Zcb = (Yc+y1+Qc)\y2;
+    Ynew = (y1+Qb)-y2*Zcb;
+
+    eigNew = eig(Ynew);
+    negEigNew = sum(eigNew<0);
+    detNew = prod(eigNew);
+%     [~,minIndex] = min(abs(eigNew));
+    minEig = Inf;
+    maxEig = 0;
+    minIndex = 0;
+%     maxIndex = 0;
+    for kk=1:numel(eigNew)
+        eigTest = abs(eigNew(kk));
+        if eigTest<minEig
+            minEig = eigTest;
+            minIndex = kk;
+        elseif eigTest>maxEig
+            maxEig = eigTest;
+%             maxIndex = kk;
         end
     end
+        
+    minEigNew = eigNew(minIndex);
+%     [~,maxIndex] = max(abs(eigNew));
+%     maxEigNew = eigNew(maxIndex);
     
-    if sign(Yold) ~= sign(Ynew)
-        if sign(Ynew-Yold) ~= sign(Yold-Yold2)
-            nodes = nodes+1;
-        elseif opt.stopAtRoot
+    if opt.output
+        Y(:,:,nn+1) = Ynew;
+        Zout(:,:,nn+1) = Zac*Zcb;
+    end
+    
+    nodes(nn+1) = nodes(nn);
+    antinodes(nn+1) = antinodes(nn);
+    if (negEigNew>negEigOld && opt.direction>0) || (negEigNew<negEigOld && opt.direction<0)
+        if opt.stopAtRoot
             if opt.direction>0 && r(nn+1)>opt.stopR
                 break;
             elseif opt.direction<0 && r(nn+1)<opt.stopR
                 break;
             end
         end
+    elseif (negEigNew<negEigOld && opt.direction>0) || (negEigNew>negEigOld && opt.direction<0)
+        nodes(nn+1) = nodes(nn)+opt.direction*(negEigOld-negEigNew);
+    elseif (minEigNew<0 && minEigOld>0 && abs(maxEig/minEigNew)>10 && opt.direction>0) || (minEigNew>0 && minEigOld<0 && opt.direction<0)
+        nodes(nn+1) = nodes(nn)+1;
     end
+    
+    if (negEigNew>negEigOld && opt.direction>0) || (negEigNew<negEigOld && opt.direction<0)
+        antinodes(nn+1) = antinodes(nn)+opt.direction*(negEigNew-negEigOld);
+    elseif (negEigNew==negEigOld && minEigNew<0 && minEigOld>0 && abs(maxEig/minEigNew)>10 && opt.direction>0) || (negEigNew==negEigOld && minEigNew>0 && minEigOld<0 && opt.direction<0)
+        antinodes(nn+1) = antinodes(nn)+1;
+    end
+    
 
-    if opt.stopAtR && isapprox(r(nn+1),opt.stopR,1e-10)
+    if opt.stopAtR && abs(r(nn+1)-opt.stopR)<1e-10
         break;
     elseif opt.stopAfterR
         if opt.direction>0 && r(nn+1)>=opt.stopR
@@ -91,10 +140,13 @@ for nn=1:numel(r)-1
 end
 
 if opt.output
-    Y = Y(1:(nn+1));
-    u = u(1:(nn+1));
+    Y = Y(:,:,1:(nn+1));
+    Zout = Zout(:,:,1:(nn+1));
 end
 
+dbg.nodes = nodes;
+dbg.antinodes = antinodes;
+nodes = nodes(nn+1);
 
 varargout{1} = Ynew;
 varargout{2} = r(nn+1);
@@ -102,7 +154,8 @@ varargout{3} = nodes;
 if opt.output && nargout>3
     varargout{4} = r(1:(nn+1));
     varargout{5} = Y;
-    varargout{6} = u;
+    varargout{6} = Zout;
+    varargout{7} = dbg;
 end
 
 end

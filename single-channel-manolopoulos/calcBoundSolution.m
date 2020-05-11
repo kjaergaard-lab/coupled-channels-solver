@@ -9,7 +9,6 @@ end
 
 opt.direction = 1;
 opt.stopAtRoot = true;
-opt.stopR = 5;
 
 opt2 = opt;
 opt2.stopAtRoot = false;
@@ -19,40 +18,29 @@ opt2.direction = -1;
 
 if nargout>1 || opt.output
     opt.output = true;
-    [ysL,rs,nL,rL,yL,zL] = manolopoulos(r,Vfunc,E,opt);
+    [ysL,rs,nL,rL,yL,uL] = manolopoulos(r,Vfunc,E,opt);
     opt2.stopR = rs;
-    [ysR,~,nR,rR,yR,zR] = manolopoulos(r,Vfunc,E,opt2);
+    [ysR,~,nR,rR,yR,uR] = manolopoulos(r,Vfunc,E,opt2);
 else
     [ysL,rs,nL] = manolopoulos(r,Vfunc,E,opt);
     opt2.stopR = rs;
     [ysR,~,nR] = manolopoulos(r,Vfunc,E,opt2);
 end
 
-
-Ydiff = ysL-ysR;
-[vecY,eigY] = eig(Ydiff);
-[~,minIndex] = min(abs(diag(eigY)));
-match = eigY(minIndex,minIndex);
-nodes = nR+nL+sum(diag(eigY)<0);
-wf = vecY(:,minIndex);
+nodes = nR+nL;
+match = ysL-ysR;
 
 if nargout>2
-%     u = [uL;flip(uR(1:end-1)/uR(end)*uL(end))];
+    u = [uL;flip(uR(1:end-1)/uR(end)*uL(end))];
     r = [rL;flip(rR(1:end-1))];
-    Y = yL;
-    Y(:,:,end+(1:(size(yR,3)-1))) = flip(yR(:,:,1:end-1),3);
-%     debugOut.u = u;
+    Y = [yL;flip(yR(1:end-1))];
+    debugOut.u = u;
     debugOut.r = r;
     debugOut.Y = Y;
-    debugOut.yL = yL;
+    debugOut.uL = uL;
     debugOut.rL = rL;
-    debugOut.yR = yR;
-    debugOut.rR = rR;
-    debugOut.wf = wf;
-    debugOut.zL = zL;
-    debugOut.zR = zR;
-    debugOut.eigY = eigY;
-    debugOut.Ydiff = Ydiff;
+    debugOut.uR = flip(uR/uR(end)*uL(end));
+    debugOut.rR = flip(rR);
 end
 
 end

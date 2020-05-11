@@ -9,8 +9,7 @@ classdef boundoptions
         output      %Create output vectors
         
         iter        %Number of iterations of the bound-state energy finder
-        tolF        %Tolerance for the bound-state energy finder
-        tolE        %Tolerance in energy for the bound-state energy finder
+        tol         %Tolerance for the bound-state energy finder
         debug       %Create debugging outputs
         pauseDelay  %Delay during debugging
         
@@ -38,9 +37,8 @@ classdef boundoptions
             opt.direction = 1;
             opt.output = false;
             
-            opt.iter = 10;
-            opt.tolF = 1e-6;
-            opt.tolE = 1e-6;
+            opt.iter = 100;
+            opt.tol = 1e-6;
             opt.debug = false;
             opt.pauseDelay = 0.1;
             
