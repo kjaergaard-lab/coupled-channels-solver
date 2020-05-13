@@ -9,23 +9,23 @@ end
 
 opt.direction = 1;
 opt.stopAtRoot = true;
-opt.stopR = 5;
+% opt.stopR = 6;
 
-opt2 = opt;
-opt2.stopAtRoot = false;
-opt2.stopAtR = true;
-opt2.stopAfterR = false;
-opt2.direction = -1;
+optR = opt;
+optR.stopAtRoot = false;
+optR.stopAtR = true;
+optR.stopAfterR = false;
+optR.direction = -1;
 
 if nargout>1 || opt.output
     opt.output = true;
     [ysL,rs,nL,rL,yL,zL] = manolopoulos(r,Vfunc,E,opt);
-    opt2.stopR = rs;
-    [ysR,~,nR,rR,yR,zR] = manolopoulos(r,Vfunc,E,opt2);
+    optR.stopR = rs;
+    [ysR,~,nR,rR,yR,zR] = manolopoulos(r,Vfunc,E,optR);
 else
     [ysL,rs,nL] = manolopoulos(r,Vfunc,E,opt);
-    opt2.stopR = rs;
-    [ysR,~,nR] = manolopoulos(r,Vfunc,E,opt2);
+    optR.stopR = rs;
+    [ysR,~,nR] = manolopoulos(r,Vfunc,E,optR);
 end
 
 

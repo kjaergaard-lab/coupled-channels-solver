@@ -21,6 +21,8 @@ classdef boundoptions
         drscale     %Scaling to use when calculating dr
         blocksize   %Size of blocks with which to calculate dr
         
+        usedipole   %Include dipole-dipole interaction
+        
     end
     
     methods
@@ -50,6 +52,8 @@ classdef boundoptions
             opt.drmax = 50;
             opt.drscale = 1e-2;
             opt.blocksize = 15;
+            
+            opt.usedipole = false;
         end
         
         function opt = set(opt,varargin)

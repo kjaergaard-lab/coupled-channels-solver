@@ -12,6 +12,9 @@ Ein = sort(Ein(:),'descend');
 [~,~,nodes(1)] = manolopoulos(x,Vfunc,Ein(1),opt);
 [~,~,nodes(2)] = manolopoulos(x,Vfunc,Ein(2),opt);
 numBound = abs(nodes(1)-nodes(2));
+if opt.debug
+    fprintf(1,'E = [%.5f,%.5f], Bound states: %d\n',Ein(1),Ein(2),numBound);
+end
 
 Eout = [];
 if numBound == 0

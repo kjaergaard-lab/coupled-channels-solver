@@ -13,7 +13,7 @@ Enew = E(1);
 match = [calcBoundSolution(r,Vfunc,E(1),opt),calcBoundSolution(r,Vfunc,E(2),opt)];
 side = 0;
 if opt.debug
-    fprintf(1,'Iter: %02d, Error = %.5e, [E1,E2] = [%.3g,%.3g], Energy = %.5f\n',00,10,E,NaN);
+    fprintf(1,'Iter: %02d, Error = %.5e, [E1,E2] = [%.3f,%.3f], Energy = %.5f\n',00,10,E,NaN);
 end
 
 usefsolve = false;
@@ -104,7 +104,7 @@ for nn=1:opt.iter
 %         plot(debugOut.rR,debugOut.uR,'.-');
 %         hold off;
 %         xlim(min(debugOut.rR)+[-1,1]);
-        fprintf(1,'Iter: %02d, Error = %.5e, [E1,E2] = [%#.3g,%#.3g], Energy = %.5f\n',nn,err,E,Enew);
+        fprintf(1,'Iter: %02d, Error = %.5e, [E1,E2] = [%#.3f,%#.3f], Energy = %.5f\n',nn,err,E,Enew);
         pause(opt.pauseDelay);
     end
 end
@@ -120,7 +120,7 @@ if usefsolve
     else
         options = optimset('display','off','tolX',opt.tolE,'maxiter',opt.iter);
     end
-    Enew = fsolve(@(E) calcBoundSolution(r,Vfunc,E,opt),mean(Ein),options);
+    Enew = fsolve(@(E) calcBoundSolution(r,Vfunc,E,opt),min(Ein),options);
 end
     
 
