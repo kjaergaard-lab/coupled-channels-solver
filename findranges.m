@@ -1,4 +1,4 @@
-function Eout = findranges(x,Vfunc,Ein,recurse,iter,opt)
+function Eout = findranges(x,Vfunc,Ein,recurse,ops,opt)
 
 if nargin<6
     opt = boundoptions;
@@ -7,38 +7,43 @@ elseif ~isa(opt,'boundoptions')
 end
 
 opt.direction = 1;
+opt.output = false;
+opt.debug = false;
 
-Ein = sort(Ein(:),'descend');
-[~,~,nodes(1)] = manolopoulos(x,Vfunc,Ein(1),opt);
-[~,~,nodes(2)] = manolopoulos(x,Vfunc,Ein(2),opt);
+E = sort(Ein(:),'descend');
+[~,~,nodes(1)] = manolopoulos(x,Vfunc,E(1),ops,opt);
+[~,~,nodes(2)] = manolopoulos(x,Vfunc,E(2),ops,opt);
 numBound = abs(nodes(1)-nodes(2));
 if opt.debug
-    fprintf(1,'E = [%.5f,%.5f], Bound states: %d\n',Ein(1),Ein(2),numBound);
+    fprintf(1,'E = [%.5f,%.5f], Bound states: %d\n',E(1),E(2),numBound);
 end
 
 Eout = [];
 if numBound == 0
     Eout = [];
 elseif numBound == 1 && recurse
-    for nn=1:iter
-        Emid = (Ein(1)+Ein(2))/2;
-        Enew = findranges(x,Vfunc,[Ein(1),Emid],false,iter,opt);
-        if ~isempty(Enew)
-            Ein = Enew;
-        else
-            Ein = findranges(x,Vfunc,[Emid,Ein(2)],false,iter,opt);
+    Enew = E;
+    for nn=1:opt.rangeiter
+        if opt.debug
+            fprintf(1,'Iterating E = [%.5f,%.5f]\n',Enew(1),Enew(2));
         end
+        Emid = (Enew(1)+Enew(2))/2;
+        Etmp = findranges(x,Vfunc,[Enew(1),Emid],false,ops,opt);
+        if isempty(Etmp)
+            Etmp = findranges(x,Vfunc,[Emid,Enew(2)],false,ops,opt);
+        end
+        Enew = Etmp;
     end
-    Eout = Ein;
+    Eout = E;
 elseif numBound == 1 && ~recurse
-    Eout = Ein;
+    Eout = E;
 else
-    Emid = (Ein(1)+Ein(2))/2;
-    Enew = findranges(x,Vfunc,[Ein(1),Emid],recurse,iter,opt);
+    Emid = (E(1)+E(2))/2;
+    Enew = findranges(x,Vfunc,[E(1),Emid],recurse,ops,opt);
     if ~isempty(Enew)
         Eout = [Eout,Enew];
     end
-    Enew = findranges(x,Vfunc,[Emid,Ein(2)],recurse,iter,opt);
+    Enew = findranges(x,Vfunc,[Emid,E(2)],recurse,ops,opt);
     if ~isempty(Enew)
         Eout = [Eout,Enew];
     end

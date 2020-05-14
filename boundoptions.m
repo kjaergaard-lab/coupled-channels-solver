@@ -9,6 +9,7 @@ classdef boundoptions
         output      %Create output vectors
         
         iter        %Number of iterations of the bound-state energy finder
+        rangeiter   %Number of iterations for finding energy ranges
         tolF        %Tolerance for the bound-state energy finder
         tolE        %Tolerance in energy for the bound-state energy finder
         debug       %Create debugging outputs
@@ -20,8 +21,10 @@ classdef boundoptions
         drmax       %Maximum dr
         drscale     %Scaling to use when calculating dr
         blocksize   %Size of blocks with which to calculate dr
+        blocks      %Indices of blocks
         
         usedipole   %Include dipole-dipole interaction
+        changeR     %R value at which to change bases
         
     end
     
@@ -41,6 +44,7 @@ classdef boundoptions
             opt.output = false;
             
             opt.iter = 10;
+            opt.rangeiter = 4;
             opt.tolF = 1e-6;
             opt.tolE = 1e-6;
             opt.debug = false;
@@ -54,6 +58,7 @@ classdef boundoptions
             opt.blocksize = 15;
             
             opt.usedipole = false;
+            opt.changeR = 10;
         end
         
         function opt = set(opt,varargin)

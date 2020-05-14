@@ -20,6 +20,7 @@ classdef boundoptions
         drmax       %Maximum dr
         drscale     %Scaling to use when calculating dr
         blocksize   %Size of blocks with which to calculate dr
+        blocks
         
         usedipole   %Include dipole-dipole interaction
         

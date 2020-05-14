@@ -1,7 +1,7 @@
-function [Eout,u,dbg,nodes] = solvebound(r,Vfunc,Ein,opt)
+function [Eout,u,dbg,nodes] = solvebound(r,Vfunc,Ein,ops,opt)
 
 %% Parse arguments
-if nargin<4
+if nargin<5
     opt = boundoptions;
 elseif ~isa(opt,'boundoptions')
     error('Options argument ''opt'' must be of type boundoptions');
@@ -10,7 +10,7 @@ end
 
 E = sort(Ein);
 Enew = E(1);
-match = [calcBoundSolution(r,Vfunc,E(1),opt),calcBoundSolution(r,Vfunc,E(2),opt)];
+match = [calcBoundSolution(r,Vfunc,E(1),ops,opt),calcBoundSolution(r,Vfunc,E(2),ops,opt)];
 side = 0;
 if opt.debug
     fprintf(1,'Iter: %02d, Error = %.5e, [E1,E2] = [%.3f,%.3f], Energy = %.5f\n',00,10,E,NaN);
@@ -30,9 +30,9 @@ for nn=1:opt.iter
     end
     
     if opt.debug
-        [mnew,~,dbg] = calcBoundSolution(r,Vfunc,Enew,opt);
+        [mnew,~,dbg] = calcBoundSolution(r,Vfunc,Enew,ops,opt);
     else
-        mnew = calcBoundSolution(r,Vfunc,Enew,opt);
+        mnew = calcBoundSolution(r,Vfunc,Enew,ops,opt);
     end
     
     err = abs(mnew);
@@ -120,13 +120,13 @@ if usefsolve
     else
         options = optimset('display','off','tolX',opt.tolE,'maxiter',opt.iter);
     end
-    Enew = fsolve(@(E) calcBoundSolution(r,Vfunc,E,opt),min(Ein),options);
+    Enew = fsolve(@(E) calcBoundSolution(r,Vfunc,E,ops,opt),min(Ein),options);
 end
     
 
 Eout = Enew;
 if opt.debug || nargout>1
-    [~,nodes,dbg] = calcBoundSolution(r,Vfunc,Eout,opt);
+    [~,nodes,dbg] = calcBoundSolution(r,Vfunc,Eout,ops,opt);
     uL = zeros(size(dbg.zL,1),size(dbg.zL,3));
     uL(:,end) = dbg.wf;
     for kk=size(uL,2):-1:2
@@ -143,8 +143,6 @@ if opt.debug || nargout>1
     u = [uL uR(:,2:end)];
     dr = repmat(diff(r(:)'),size(u,1),1);
     u = u./sqrt(sum(sum(abs(u(:,1:end-1)).^2.*dr,2),1));   
-%     u = debugOut.u;
-%     u = u./sqrt(sum(u(1:end-1).^2.*diff(r)));
 end
 
 if opt.debug

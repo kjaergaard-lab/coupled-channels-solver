@@ -1,7 +1,7 @@
-function [match,nodes,debugOut] = calcBoundSolution(r,Vfunc,E,opt)
+function [match,nodes,debugOut] = calcBoundSolution(r,Vfunc,E,ops,opt)
 
 %% Parse arguments
-if nargin<4
+if nargin<5
     opt = boundoptions;
 elseif ~isa(opt,'boundoptions')
     error('Options argument ''opt'' must be of type boundoptions');
@@ -19,20 +19,21 @@ optR.direction = -1;
 
 if nargout>1 || opt.output
     opt.output = true;
-    [ysL,rs,nL,rL,yL,zL] = manolopoulos(r,Vfunc,E,opt);
+    [ysL,rs,nL,rL,yL,zL] = manolopoulos(r,Vfunc,E,ops,opt);
     optR.stopR = rs;
-    [ysR,~,nR,rR,yR,zR] = manolopoulos(r,Vfunc,E,optR);
+    optR.output = true;
+    [ysR,~,nR,rR,yR,zR] = manolopoulos(r,Vfunc,E,ops,optR);
 else
-    [ysL,rs,nL] = manolopoulos(r,Vfunc,E,opt);
+    [ysL,rs,nL] = manolopoulos(r,Vfunc,E,ops,opt);
     optR.stopR = rs;
-    [ysR,~,nR] = manolopoulos(r,Vfunc,E,optR);
+    [ysR,~,nR] = manolopoulos(r,Vfunc,E,ops,optR);
 end
 
 
 Ydiff = ysL-ysR;
 [vecY,eigY] = eig(Ydiff);
 [~,minIndex] = min(abs(diag(eigY)));
-match = eigY(minIndex,minIndex);
+match = real(eigY(minIndex,minIndex));
 nodes = nR+nL+sum(diag(eigY)<0);
 wf = vecY(:,minIndex);
 

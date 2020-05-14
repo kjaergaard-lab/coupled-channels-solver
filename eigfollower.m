@@ -2,6 +2,7 @@ function eigANew = eigfollower(r,Y)
 
 Nch = size(Y,1);
 [vecNew,eigNew] = eig(Y(:,:,1));
+vecNew = gramschmidt(vecNew);
 eigNew = diag(eigNew);
 eigANew = zeros(Nch,size(Y,3));
 eigANew(:,1) = eigNew;
@@ -11,6 +12,7 @@ for nn=1:(size(Y,3)-1)
     vecAOld = vecANew;
     eigOld = eigNew;
     [vecNew,eigNew] = eig(Y(:,:,nn+1));
+    vecNew = gramschmidt(vecNew);
     eigNew = diag(eigNew);
 %     eigAOld = eigANew;
 %     eigANew = eigNew;
@@ -29,7 +31,7 @@ for nn=1:(size(Y,3)-1)
                 l2idx = kold;
             end
         end
-        vecANew(:,knew) = vecNew(:,l2idx);
-        eigANew(knew,nn+1) = eigNew(l2idx);
+        vecANew(:,l2idx) = vecNew(:,knew);
+        eigANew(l2idx,nn+1) = eigNew(knew);
     end
 end

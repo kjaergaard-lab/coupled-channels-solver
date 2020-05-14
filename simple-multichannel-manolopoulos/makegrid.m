@@ -1,4 +1,4 @@
-function [rout,Vout] = makegrid(Vfunc,E,opt)
+function [rout,blocks] = makegrid(Vfunc,E,opt)
 
 if nargin<3
     opt = boundoptions;
@@ -8,7 +8,7 @@ end
 
 %% Create grid
 numSegments = ceil(opt.rmax/opt.blocksize);
-rtmp = linspace(opt.rmin,numSegments*opt.blocksize,1e3);
+rtmp = linspace(opt.rmin,opt.rmin+numSegments*opt.blocksize,1e3);
 I = eye(size(Vfunc(rtmp(1))));
 Nch = size(I,1);
 f = Vfunc(rtmp)-E*I;
@@ -18,6 +18,7 @@ for kk=1:numel(rtmp)
 end
 
 rout = [];
+blocks = zeros(numSegments,2);
 
 for jj=1:numSegments
     rStart = opt.rmin+(jj-1)*opt.blocksize;
@@ -33,12 +34,11 @@ for jj=1:numSegments
     
     N = max(ceil(abs(rEnd-rStart)/dr),2);
     r = linspace(rStart,rEnd,N)';
+    blocks(jj,:) = numel(rout)+[1,N];
     rout = [rout;r(1:end-1)]; %#ok<AGROW>
     
 end
 
 rout(end+1) = r(end);
-
-Vout = Vfunc(rout);
 
 end
