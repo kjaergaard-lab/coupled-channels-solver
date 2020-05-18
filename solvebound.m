@@ -120,7 +120,7 @@ if usefsolve
     else
         options = optimset('display','off','tolX',opt.tolE,'maxiter',opt.iter);
     end
-    Enew = fsolve(@(E) calcBoundSolution(r,Vfunc,E,ops,opt),min(Ein),options);
+    Enew = fsolve(@(E) calcBoundSolution(r,Vfunc,E,ops,opt),max(Ein),options);
 end
     
 

@@ -1,4 +1,4 @@
-function [Ebound,wf] = MultiChannelBound(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,opt)
+function [Ebound,wf,r] = MultiChannelBound(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,opt)
 % MultiChannel computes the scattering properties of a pair of alkali metal
 % atoms
 %   Usage 1: MultiChannel(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,DipoleFlag,IntParams)
@@ -136,27 +136,28 @@ Hint0 = BT21*Hint0*BT21';
 
 
 %% Loop over magnetic field inputs
-% Ebound = cell(Nruns,1);
-% for nn=1:Nruns
-%     ops = boundoperators(scale,LMat,SpinProj,Hdd,Hint0,Hint(:,:,nn),BT2int(:,:,nn));
-%     [r,opt.blocks] = makegrid(@(x) PotentialFunc(x,scale,LMat,SpinProj,Hdd,Hint0)+Hint(:,:,nn),max(Escale),opt);
-%     Eranges = findranges(r,PotentialFunc,Escale,true,ops,opt);
-%     if opt.debug
-%         fprintf(1,'Number of bound states between [%#.5g,%#.5g]: %d\n',Ein(1),Ein(2),size(Eranges,2));
-%     end
-%     
-%     for mm=1:size(Eranges,2)
-%         if opt.output
-%             [Ebound{nn}(mm,1),wf{nn,mm}] = solvebound(r,PotentialFunc,Eranges(:,mm),ops,opt); %#ok<AGROW>
-%         else
-%             Ebound{nn}(mm,1) = solvebound(r,PotentialFunc,Eranges(:,mm),ops,opt);
-%         end
-%     end
-% end
+Ebound = cell(Nruns,1);
+for nn=1:Nruns
+    fprintf(1,'Run %d/%d\n',nn,Nruns);
+    ops = boundoperators(scale,LMat,SpinProj,Hdd,Hint0,Hint(:,:,nn),BT2int(:,:,nn));
+    [r,opt.blocks] = makegrid(@(x) PotentialFunc(x,scale,LMat,SpinProj,Hdd,Hint0)+Hint(:,:,nn),max(Escale),opt);
+    Eranges = findranges(r,PotentialFunc,Escale,true,ops,opt);
+    if opt.debug
+        fprintf(1,'Number of bound states between [%#.5g,%#.5g]: %d\n',Ein(1),Ein(2),size(Eranges,2));
+    end
+    
+    for mm=1:size(Eranges,2)
+        if opt.output
+            [Ebound{nn}(mm,1),wf{nn,mm}] = solvebound(r,PotentialFunc,Eranges(:,mm),ops,opt); %#ok<AGROW>
+        else
+            Ebound{nn}(mm,1) = solvebound(r,PotentialFunc,Eranges(:,mm),ops,opt);
+        end
+    end
+end
 
-nn = 1;
-ops = boundoperators(scale,LMat,SpinProj,Hdd,Hint0,Hint(:,:,nn),BT2int(:,:,nn));
-[r,opt.blocks] = makegrid(@(x) PotentialFunc(x,scale,LMat,SpinProj,Hdd,Hint0)+Hint(:,:,nn),max(Escale),opt);
+% nn = 1;
+% ops = boundoperators(scale,LMat,SpinProj,Hdd,Hint0,Hint(:,:,nn),BT2int(:,:,nn));
+% [r,opt.blocks] = makegrid(@(x) PotentialFunc(x,scale,LMat,SpinProj,Hdd,Hint0)+Hint(:,:,nn),max(Escale),opt);
 
 if length(OutputFile)
     save(OutputFile);

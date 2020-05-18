@@ -20,8 +20,8 @@ elseif opt.direction<0
 end
 Ynew = diag(diag(Ynew));
 
-[vecNew,eigNew] = eig(Ynew);
-eigNew = diag(eigNew);
+[vecNew,eigNew] = eig(Ynew,'vector');
+eigNew = real(eigNew);
 negEigNew = sum(eigNew<0);
 eigAOld = eigNew;
 eigANew = eigNew;
@@ -32,6 +32,8 @@ if opt.output
     Y = zeros(Nch,Nch,numel(r));
     Y(:,:,1) = Ynew;
     Zout = zeros(Nch,Nch,numel(r));
+    eigOut = zeros(Nch,numel(r));
+    eigOut(:,1) = eigNew;
 end
 
 breakFlag = false;
@@ -40,12 +42,11 @@ dbg.test = zeros(numel(r),1);
 gcnt = 1;
 
 for bb=1:size(opt.blocks,1)
-    Epot = repmat(E*I,1,1,opt.blocks(bb,2)-opt.blocks(bb,1)+1);
+%     Epot = repmat(E*I,1,1,opt.blocks(bb,2)-opt.blocks(bb,1)+1);
     rb = r(opt.blocks(bb,1):opt.blocks(bb,2));
     h = (rb(2)-rb(1))/2;
-    M = Vfunc(rb)-Epot;
-%     M2 = Vfunc(rb(1:end-1)+h)-Epot(:,:,1:end-1);
-    M2 = Vfunc(rb+h)-Epot;
+    M = Vfunc(rb)-E*I;
+    M2 = Vfunc(rb+h)-E*I;
 
     %% Solve
     for nn=1:numel(rb)-1
@@ -62,16 +63,16 @@ for bb=1:size(opt.blocks,1)
         Qc = 4/h*((I-h^2/6*(M2(:,:,nn)-Mref))\I)-4/h*I;
         Qb = h/3*(M(:,:,nn+1)-Mref);
         
-        Zac = (Ynew+y1+Qa)\y2;
-        Yc = (y1+Qc)-y2*Zac;
-        Zcb = (Yc+y1+Qc)\y2;
-        Ynew = (y1+Qb)-y2*Zcb;
+        Zac = real((Ynew+y1+Qa)\y2);
+        Yc = real((y1+Qc)-y2*Zac);
+        Zcb = real((Yc+y1+Qc)\y2);
+        Ynew = real((y1+Qb)-y2*Zcb);
         
         vecAOld = vecANew;
         eigAOld2 = eigAOld;
         eigAOld = eigANew;
-        [vecNew,eigNew] = eig(Ynew);
-        eigNew = diag(eigNew);
+        [vecNew,eigNew] = eig(Ynew,'vector');
+        eigNew = real(eigNew);
         minEigNew = Inf;
         maxEigNew = 0;
         for kk=1:Nch
@@ -81,11 +82,6 @@ for bb=1:size(opt.blocks,1)
             elseif eigTest>maxEigNew
                 maxEigNew = eigTest;
             end
-        end
-        
-        if opt.output
-            Y(:,:,gcnt+1) = Ynew;
-            Zout(:,:,gcnt+1) = Zac*Zcb;
         end
         
         for knew=1:Nch
@@ -98,8 +94,14 @@ for bb=1:size(opt.blocks,1)
                     l2idx = kold;
                 end
             end
-            vecANew(:,knew) = vecNew(:,l2idx);
-            eigANew(knew) = eigNew(l2idx);
+            vecANew(:,l2idx) = vecNew(:,knew);
+            eigANew(l2idx) = eigNew(knew);
+        end
+        
+        if opt.output
+            Y(:,:,gcnt+1) = Ynew;
+            Zout(:,:,gcnt+1) = Zac*Zcb;
+            eigOut(:,gcnt+1) = eigANew;
         end
         
         dnodes = 0;
@@ -144,6 +146,7 @@ end
 if opt.output
     Y = Y(:,:,1:gcnt);
     Zout = Zout(:,:,1:gcnt);
+    dbg.eigOut = eigOut(:,1:gcnt);
 end
 
 dbg.nodes = nodes;

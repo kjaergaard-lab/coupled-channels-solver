@@ -17,7 +17,7 @@ elseif opt.direction<0
     opt.blocks = rot90(numel(r)-opt.blocks+1,2);
     ops = ops.spin2int;
 end
-Ynew = sign(opt.direction)*sqrt(Vfunc(r(1),ops.scale,ops.L,ops.SpinProj,ops.Hdd,ops.H0)+ops.Hint-E*I);
+Ynew = real(sign(opt.direction)*sqrt(Vfunc(r(1),ops.scale,ops.L,ops.SpinProj,ops.Hdd,ops.H0)+ops.Hint-E*I));
 Ynew = real(diag(diag(Ynew)));
 
 [vecNew,eigNew] = eig(Ynew,'vector');
@@ -136,35 +136,37 @@ for bb=1:size(opt.blocks,1)
         end
         
         gcnt = gcnt+1;
-        if breakFlag, break;end
+        
+        if breakFlag
+            break;
+        elseif ~changeFlag && ((rb(nn+1)>=opt.changeR && opt.direction>0) || (rb(nn+1)<=opt.changeR && opt.direction<0))
+            changeFlag = true;
+            ops = ops.rotate;
+            Ynew = ops.U*Ynew*ops.U';
+            [vecNew,eigNew] = eig(Ynew,'vector');
+            vecNew = gramschmidt(vecNew);
+            v = vecNew;
+            for knew=1:Nch
+                for kold=1:Nch
+                    if abs(eigNew(knew)-eigANew(kold))<1e-9
+                        v(:,kold) = vecNew(:,knew);
+                        break;
+                    end
+                end
+            end
+            vecANew = v;
+            
+            if opt.output
+                for gg=1:gcnt
+                    Y(:,:,gg) = ops.U*Y(:,:,gg)*ops.U';
+                    Zout(:,:,gg) = ops.U*Zout(:,:,gg)*ops.U';
+                end
+            end
+        end
     end
     
     if breakFlag
         break;
-    elseif ~changeFlag && ((rb(nn+1)>=opt.changeR && opt.direction>0) || (rb(nn+1)<=opt.changeR && opt.direction<0))
-        changeFlag = true;
-        ops = ops.rotate;
-        Ynew = ops.U*Ynew*ops.U';
-%         vecANew = ops.U*vecANew*ops.U';
-        [vecNew,eigNew] = eig(Ynew,'vector');
-        vecNew = gramschmidt(vecNew);
-        v = vecNew;
-        for knew=1:Nch
-            for kold=1:Nch
-                if abs(eigNew(knew)-eigANew(kold))<1e-9
-                    v(:,kold) = vecNew(:,knew);
-                    break;
-                end
-            end
-        end
-        vecANew = v;
-        
-        if opt.output
-            for gg=1:gcnt
-                Y(:,:,gg) = ops.U*Y(:,:,gg)*ops.U';
-                Zout(:,:,gg) = ops.U*Zout(:,:,gg)*ops.U';
-            end
-        end
     end
     
     

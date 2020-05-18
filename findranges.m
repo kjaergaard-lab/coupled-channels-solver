@@ -22,17 +22,16 @@ Eout = [];
 if numBound == 0
     Eout = [];
 elseif numBound == 1 && recurse
-    Enew = E;
     for nn=1:opt.rangeiter
         if opt.debug
-            fprintf(1,'Iterating E = [%.5f,%.5f]\n',Enew(1),Enew(2));
+            fprintf(1,'Iterating E = [%.5f,%.5f]\n',E(1),E(2));
         end
-        Emid = (Enew(1)+Enew(2))/2;
-        Etmp = findranges(x,Vfunc,[Enew(1),Emid],false,ops,opt);
+        Emid = (E(1)+E(2))/2;
+        Etmp = findranges(x,Vfunc,[E(1),Emid],false,ops,opt);
         if isempty(Etmp)
-            Etmp = findranges(x,Vfunc,[Emid,Enew(2)],false,ops,opt);
+            Etmp = findranges(x,Vfunc,[Emid,E(2)],false,ops,opt);
         end
-        Enew = Etmp;
+        E = Etmp;
     end
     Eout = E;
 elseif numBound == 1 && ~recurse
