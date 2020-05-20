@@ -12,13 +12,16 @@ I = eye(size(ops.L));
 Nch = size(I,1);
 if opt.direction>0
     ops = ops.int2spin;
+    Ynew = real(sqrt(Vfunc(r(1),ops.scale,ops.L,ops.SpinProj,ops.Hdd,ops.H0)+ops.Hint-E*I));
 elseif opt.direction<0
     r = flip(r);
     opt.blocks = rot90(numel(r)-opt.blocks+1,2);
     ops = ops.spin2int;
+    Ynew = real(sqrt(Vfunc(r(1),ops.scale,ops.L,ops.SpinProj,ops.Hdd,ops.H0)+ops.Hint-E*I));
+    Ynew = ops.U*Ynew*ops.U';
+    ops = ops.rotate;
 end
-Ynew = real(sign(opt.direction)*sqrt(Vfunc(r(1),ops.scale,ops.L,ops.SpinProj,ops.Hdd,ops.H0)+ops.Hint-E*I));
-Ynew = real(diag(diag(Ynew)));
+Ynew = sign(opt.direction)*diag(diag(Ynew));
 
 [vecNew,eigNew] = eig(Ynew,'vector');
 % eigNew = diag(eigNew);
@@ -111,7 +114,8 @@ for bb=1:size(opt.blocks,1)
         
         dnodes = 0;
         for kk=1:Nch
-            if sign(eigAOld(kk)) ~= sign(eigANew(kk))
+%             if sign(eigAOld(kk)) ~= sign(eigANew(kk))
+            if opt.direction>0 && eigAOld2(kk)<0 && eigAOld(kk)<0 && eigANew(kk)>0
                 if (sign(eigANew(kk)-eigAOld(kk)) ~= sign(eigAOld(kk)-eigAOld2(kk))) && (abs(eigANew(kk))>0.1 || abs(eigAOld(kk))>0.1)
                     dnodes = dnodes+1;
                 elseif opt.stopAtRoot
@@ -139,30 +143,31 @@ for bb=1:size(opt.blocks,1)
         
         if breakFlag
             break;
-        elseif ~changeFlag && ((rb(nn+1)>=opt.changeR && opt.direction>0) || (rb(nn+1)<=opt.changeR && opt.direction<0))
-            changeFlag = true;
-            ops = ops.rotate;
-            Ynew = ops.U*Ynew*ops.U';
-            [vecNew,eigNew] = eig(Ynew,'vector');
-            vecNew = gramschmidt(vecNew);
-            v = vecNew;
-            for knew=1:Nch
-                for kold=1:Nch
-                    if abs(eigNew(knew)-eigANew(kold))<1e-9
-                        v(:,kold) = vecNew(:,knew);
-                        break;
-                    end
-                end
-            end
-            vecANew = v;
-            
-            if opt.output
-                for gg=1:gcnt
-                    Y(:,:,gg) = ops.U*Y(:,:,gg)*ops.U';
-                    Zout(:,:,gg) = ops.U*Zout(:,:,gg)*ops.U';
-                end
-            end
         end
+%         elseif ~changeFlag && ((rb(nn+1)>=opt.changeR && opt.direction>0) || (rb(nn+1)<=opt.changeR && opt.direction<0))
+%             changeFlag = true;
+%             ops = ops.rotate;
+%             Ynew = ops.U*Ynew*ops.U';
+%             [vecNew,eigNew] = eig(Ynew,'vector');
+%             vecNew = gramschmidt(vecNew);
+%             v = vecNew;
+%             for knew=1:Nch
+%                 for kold=1:Nch
+%                     if abs(eigNew(knew)-eigANew(kold))<1e-9
+%                         v(:,kold) = vecNew(:,knew);
+%                         break;
+%                     end
+%                 end
+%             end
+%             vecANew = v;
+%             
+%             if opt.output
+%                 for gg=1:gcnt
+%                     Y(:,:,gg) = ops.U*Y(:,:,gg)*ops.U';
+%                     Zout(:,:,gg) = ops.U*Zout(:,:,gg)*ops.U';
+%                 end
+%             end
+%         end
     end
     
     if breakFlag

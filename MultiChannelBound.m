@@ -1,4 +1,4 @@
-function [Ebound,wf,r] = MultiChannelBound(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,opt)
+function [Eout,results] = MultiChannelBound(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,opt)
 % MultiChannel computes the scattering properties of a pair of alkali metal
 % atoms
 %   Usage 1: MultiChannel(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,DipoleFlag,IntParams)
@@ -64,7 +64,7 @@ end
 
 scale = const.cm2K*const.K2A(mass); %Converts energies in cm^{-1} to wavenumber^2 in Angstrom^2
 Nruns = numel(Bin);
-Escale = Ein*const.cm2K;  %Convert from K to wavenumber^2 in Angstrom^2
+Escale = Ein*const.K2A(mass);  %Convert from K to wavenumber^2 in Angstrom^2
 B = Bin*1e-4;                   %Convert from Gauss to Tesla
 
 
@@ -136,30 +136,48 @@ Hint0 = BT21*Hint0*BT21';
 
 
 %% Loop over magnetic field inputs
-Ebound = cell(Nruns,1);
+results(Nruns,1) = boundresults;
+maxBoundStates = 0;
 for nn=1:Nruns
     fprintf(1,'Run %d/%d\n',nn,Nruns);
     ops = boundoperators(scale,LMat,SpinProj,Hdd,Hint0,Hint(:,:,nn),BT2int(:,:,nn));
     [r,opt.blocks] = makegrid(@(x) PotentialFunc(x,scale,LMat,SpinProj,Hdd,Hint0)+Hint(:,:,nn),max(Escale),opt);
     Eranges = findranges(r,PotentialFunc,Escale,true,ops,opt);
+    if size(Eranges,2)>maxBoundStates
+        maxBoundStates = size(Eranges,2);
+    end
+    
     if opt.debug
         fprintf(1,'Number of bound states between [%#.5g,%#.5g]: %d\n',Ein(1),Ein(2),size(Eranges,2));
     end
+    results(nn).r = r;
+    results(nn).BT2int = BT2int(:,:,nn);
+    results(nn).BV2 = BV2;
+    results(nn).BVint = BVint;
+    results(nn).basis = 1;
     
     for mm=1:size(Eranges,2)
         if opt.output
-            [Ebound{nn}(mm,1),wf{nn,mm}] = solvebound(r,PotentialFunc,Eranges(:,mm),ops,opt); %#ok<AGROW>
+            [Ebound,wf] = solvebound(r,PotentialFunc,Eranges(:,mm),ops,opt);
+            results(nn).E{mm} = Ebound/const.K2A(mass);
+            results(nn).wf{mm,1} = wf;
         else
-            Ebound{nn}(mm,1) = solvebound(r,PotentialFunc,Eranges(:,mm),ops,opt);
+            Ebound = solvebound(r,PotentialFunc,Eranges(:,mm),ops,opt);
+            results(nn).E{mm} = Ebound/const.K2A(mass);
         end
     end
+end
+
+Eout = NaN(Nruns,maxBoundStates);
+for nn=1:Nruns
+    Eout(nn,1:results(nn).count) = cell2mat(results(nn).E);
 end
 
 % nn = 1;
 % ops = boundoperators(scale,LMat,SpinProj,Hdd,Hint0,Hint(:,:,nn),BT2int(:,:,nn));
 % [r,opt.blocks] = makegrid(@(x) PotentialFunc(x,scale,LMat,SpinProj,Hdd,Hint0)+Hint(:,:,nn),max(Escale),opt);
 
-if length(OutputFile)
+if ~isempty(OutputFile)
     save(OutputFile);
 end
 

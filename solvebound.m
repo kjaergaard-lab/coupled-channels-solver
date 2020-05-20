@@ -7,10 +7,12 @@ elseif ~isa(opt,'boundoptions')
     error('Options argument ''opt'' must be of type boundoptions');
 end
 
+opt2 = opt;
+opt2.output = false;
 
 E = sort(Ein);
 Enew = E(1);
-match = [calcBoundSolution(r,Vfunc,E(1),ops,opt),calcBoundSolution(r,Vfunc,E(2),ops,opt)];
+match = [calcBoundSolution(r,Vfunc,E(1),ops,opt2),calcBoundSolution(r,Vfunc,E(2),ops,opt2)];
 side = 0;
 if opt.debug
     fprintf(1,'Iter: %02d, Error = %.5e, [E1,E2] = [%.3f,%.3f], Energy = %.5f\n',00,10,E,NaN);
@@ -30,9 +32,9 @@ for nn=1:opt.iter
     end
     
     if opt.debug
-        [mnew,~,dbg] = calcBoundSolution(r,Vfunc,Enew,ops,opt);
+        [mnew,~,dbg] = calcBoundSolution(r,Vfunc,Enew,ops,opt2);
     else
-        mnew = calcBoundSolution(r,Vfunc,Enew,ops,opt);
+        mnew = calcBoundSolution(r,Vfunc,Enew,ops,opt2);
     end
     
     err = abs(mnew);
@@ -120,7 +122,7 @@ if usefsolve
     else
         options = optimset('display','off','tolX',opt.tolE,'maxiter',opt.iter);
     end
-    Enew = fsolve(@(E) calcBoundSolution(r,Vfunc,E,ops,opt),max(Ein),options);
+    Enew = fsolve(@(E) calcBoundSolution(r,Vfunc,E,ops,opt2),max(Ein),options);
 end
     
 

@@ -8,7 +8,8 @@ elseif ~isa(opt,'boundoptions')
 end
 
 opt.direction = 1;
-opt.stopAtRoot = true;
+% opt.stopAtRoot = true;
+opt.stopAfterR = true;
 % opt.stopAtR = true;
 % opt.stopR = 6;
 

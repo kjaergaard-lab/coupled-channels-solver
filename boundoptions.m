@@ -38,7 +38,7 @@ classdef boundoptions
             opt.stopAtRoot = false;
             opt.stopAtR = false;
             opt.stopAfterR = false;
-            opt.stopR = 5;
+            opt.stopR = 6;
             
             opt.direction = 1;
             opt.output = false;
