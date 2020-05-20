@@ -27,9 +27,18 @@ classdef const < handle
     end
     
     methods(Static)
-        %Converts an energy given in cm^{-1} to K
         function a=cm2K
-            a=1e2*const.h*const.c/const.kb;
-        end;
+            %Converts an energy given in cm^{-1} to K
+            a = 1e2*const.h*const.c/const.kb;
+        end
+        
+        function a = K2A(mass)
+            %K2A Converts an energy in Kelvin to a wavenumber^2 in
+            %Angstrom^2.
+            %   A = K2A(MASS) calculates conversion constant using given
+            %   reduced mass
+            a = 2*mass/const.hbar^2*1e-20*const.kb;
+        end
+        
     end
 end

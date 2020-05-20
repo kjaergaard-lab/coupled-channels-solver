@@ -44,11 +44,15 @@ if sel==0
     a(26)=0.586778574293387070e11;
 
     x=(r-Rm)./(r+b.*Rm);
-    Nterms=numel(a);
-    Uir=zeros(size(r));
-    for nn=1:Nterms
-        Uir=Uir+a(nn).*x.^(nn-1);
-    end
+%     Nterms=numel(a);
+%     Uir=zeros(size(r));
+%     for nn=1:Nterms
+%         Uir=Uir+a(nn).*x.^(nn-1);
+%     end
+    Uir = a(1)+a(2)*x+a(3)*x.^2+a(4)*x.^3+a(5)*x.^4+a(6)*x.^5+a(7)*x.^6+a(8)*x.^7+...
+          a(9)*x.^8+a(10)*x.^9+a(11)*x.^10+a(12)*x.^11+a(13)*x.^12+a(14)*x.^13+a(15)*x.^14+...
+          a(16)*x.^15+a(17)*x.^16+a(18)*x.^17+a(19)*x.^18+a(20)*x.^19+a(21)*x.^20+a(22)*x.^21+...
+          a(23)*x.^22+a(24)*x.^23+a(25)*x.^24+a(26)*x.^25;
 
     %% Outer Region
 %     Uinf=0;
@@ -102,11 +106,13 @@ else
     a(13)=-0.398783520249289213e5;
     
     x=(r-Rm)./(r+b.*Rm);
-    Nterms=numel(a);
-    Uir=zeros(size(r));
-    for nn=1:Nterms
-        Uir=Uir+a(nn).*x.^(nn-1);
-    end
+%     Nterms=numel(a);
+%     Uir=zeros(size(r));
+%     for nn=1:Nterms
+%         Uir=Uir+a(nn).*x.^(nn-1);
+%     end
+    Uir = a(1)+a(2)*x+a(3)*x.^2+a(4)*x.^3+a(5)*x.^4+a(6)*x.^5+a(7)*x.^6+a(8)*x.^7+...
+          a(9)*x.^8+a(10)*x.^9+a(11)*x.^10+a(12)*x.^11+a(13)*x.^12;
 
     %% Outer Region
 %     Uinf=0;
