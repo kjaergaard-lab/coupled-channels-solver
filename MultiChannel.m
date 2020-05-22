@@ -184,7 +184,11 @@ Output.Ein = Ein;
 Output.Bin = Bin;
 
 if size(S,3)>1
-    sm = ScatteringMatrix(S,basis.bvint,basis.symmetry,initLabel);
+    if basis.symmetry==0
+        sm = ScatteringMatrix(S,basis.bvint,basis.symmetry,OutIdx);
+    else
+        sm = ScatteringMatrix(Ssym,BVSymInt,basis.symmetry,OutIdx);
+    end
     sm.mass = basis.mass;
     sm.E = Ein;
     sm.B = Bin;
