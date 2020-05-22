@@ -24,7 +24,7 @@ VDirect=repmat(VDirect,[N,N,1]).*repmat(eye(N),[1,1,Nx]);
 J=repmat(J,[N,N,1]).*repmat(SpinEx,[1,1,Nx]);
 
 %Dipole-dipole term
-Hdd=Scale*bsxfun(@times,Hdd,1./x.^3+aSO.*exp(-b*(x-R_SO)));
+Hdd=bsxfun(@times,Hdd,1./x.^3+aSO.*exp(-b*(x-R_SO)));
 
 %Variation of hyperfine constants
 % H0=bsxfun(@times,H0,cf./(exp((x-R0)./DeltaR)+1));

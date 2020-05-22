@@ -16,11 +16,11 @@ classdef ScatteringMatrix < handle
             if symIn == 0
                 obj.BV = BVin;
                 obj.symmetry = symIn;
-                obj.targetIndex = find(all(obj.BV==repmat(InitStateLabel,size(Sin,1),1),2));
+                obj.targetIndex = find(all(obj.BV(:,[1,2,5,6])==repmat(InitStateLabel,size(Sin,1),1),2));
             elseif symIn == 1 || symIn == -1
                 [Sin,obj.BV]=SymmetrizeSMatrixArbL(Sin,BVin,symIn);
                 obj.symmetry = symIn;
-                obj.targetIndex = find(all(obj.BV==repmat([InitStateLabel(1:2),sort(InitStateLabel(3:4),2)],size(Sin,1),1),2));
+                obj.targetIndex = find(all(obj.BV(:,[1,2,5,6])==repmat([InitStateLabel(1:2),sort(InitStateLabel(3:4),2)],size(Sin,1),1),2));
             else
                 error('Input argument symIn must be either -1, 0, or 1');
             end
@@ -71,7 +71,7 @@ classdef ScatteringMatrix < handle
                     elseif numel(S(1).subs) == 1
                         B = obj.SS(S(1).subs{1});
                     elseif numel(S(1).subs) == 4
-                        nn = find(all(obj.BV == repmat(cell2mat(S(1).subs),size(obj.BV,1),1),2));
+                        nn = find(all(obj.BV(:,[1,2,5,6]) == repmat(cell2mat(S(1).subs),size(obj.BV,1),1),2));
                         if isempty(nn)
                             error('That state is not in the scattering matrix');
                         end
