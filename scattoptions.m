@@ -1,4 +1,4 @@
-classdef scattoptions < handle
+classdef scattoptions
     %SCATTOPTIONS Options for solving coupled channels equations for
     %scattering states
     
@@ -20,8 +20,8 @@ classdef scattoptions < handle
             %properties
             %
             %   See also SCATTOPTIONS.SET
-            self.setDefaults();
-            self.set(varargin{:});
+            self = self.setDefaults();
+            self = self.set(varargin{:});
             if self.dipole
                 self.blocksize = 5;
             end

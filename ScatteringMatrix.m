@@ -32,13 +32,49 @@ classdef ScatteringMatrix < handle
                 initState = self.bv(self.targetIndex,5:6);
                 finalState = initState;
             elseif nargin==2
-                initState = self.bv(self.targetIndex,5:6);
-                finalState = varargin{1};
+                if ~ischar(varargin{1})
+                    initState = self.bv(self.targetIndex,5:6);
+                    finalState = varargin{1};
+                else
+                    [~,ia] = unique(self.bv(:,5:6),'rows');
+                    intState = self.bv(ia,:);
+                    cs = zeros(numel(self.E),1);
+                    for nn=1:size(intState,1)
+                        tmp = self.crossSec(intState(nn,5:6));
+                        cs = cs+tmp*(1+1*(intState(nn,5)==intState(nn,6)));
+                    end
+                    
+                    if strcmpi(varargin{1},'total')
+                        return
+                    elseif strcmpi(varargin{1},'inelastic')
+                        cs = cs-self.crossSec();
+                        return;
+                    end
+                end
             elseif nargin==3
                 initState = varargin{1};
                 finalState = varargin{2};
             end
             cs = CalculatePartialCrossSection(self.Tfull,self.bv(:,[1,2,5,6]),self.k,initState,finalState,self.symmetry);
+        end
+        
+        function self = plotCrossSections(self)
+            [~,ia] = unique(self.bv(:,5:6),'rows');
+            intState = self.bv(ia,:);
+            jj = 1;
+            clf;
+            for nn=1:size(intState,1)
+                tmp = self.crossSec(intState(nn,5:6));
+                if tmp(end)~=0
+                    cs = tmp*(1+1*(intState(nn,5)==intState(nn,6)));
+                    plot(self.E,cs,'.-');
+                    hold on;
+                    str{jj} = sprintf('%d-%d',intState(nn,5:6)); %#ok<AGROW>
+                    jj=jj+1;
+                end
+            end
+            hold off;
+            legend(str);
         end
         
         function B = subsref(self,S)
