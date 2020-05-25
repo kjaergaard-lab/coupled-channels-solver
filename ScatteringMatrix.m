@@ -27,6 +27,20 @@ classdef ScatteringMatrix < handle
             self.k = sqrt(2*self.mass/const.hbar^2*tmp(:));  %#ok
         end
         
+        function cs = crossSec(self,varargin)
+            if nargin==1
+                initState = self.bv(self.targetIndex,5:6);
+                finalState = initState;
+            elseif nargin==2
+                initState = self.bv(self.targetIndex,5:6);
+                finalState = varargin{1};
+            elseif nargin==3
+                initState = varargin{1};
+                finalState = varargin{2};
+            end
+            cs = CalculatePartialCrossSection(self.Tfull,self.bv(:,[1,2,5,6]),self.k,initState,finalState,self.symmetry);
+        end
+        
         function B = subsref(self,S)
             idx1 = self.targetIndex;
             idx2 = idx1;
