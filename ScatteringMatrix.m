@@ -40,6 +40,7 @@ classdef ScatteringMatrix < handle
                                 B = squeeze(self.Tfull(idx1,idx2,:));
                             otherwise
                                 B = builtin('subsref',self,S);
+                                return;
                         end
                         
                     case '()'
@@ -48,9 +49,6 @@ classdef ScatteringMatrix < handle
                                 idx2 = S(nn).subs{1};
                             elseif numel(S(nn).subs)==4
                                 idx2 = find(all(self.bv(:,[1,2,5,6])==repmat(cell2mat(S(nn).subs),size(self.bv,1),1),2));
-                            elseif numel(S(nn).subs)==2 && numel(S(nn).subs{1})==4 && numel(S(nn).subs{2})==4
-                                idx1 = find(all(self.bv(:,[1,2,5,6])==repmat(S(nn).subs{1},size(self.bv,1),1),2));
-                                idx2 = find(all(self.bv(:,[1,2,5,6])==repmat(S(nn).subs{2},size(self.bv,1),1),2));
                             elseif numel(S(nn).subs)==8
                                 v = cell2mat(S(nn).subs);
                                 v1 = v(1:4);v2 = v(5:8);
@@ -60,7 +58,8 @@ classdef ScatteringMatrix < handle
                                 error('Index type not supported');
                             end
                         else
-                            B = subsref(B,S(nn));
+                            tmp = B;
+                            B = subsref(tmp,S(nn));
                         end
                         
                     otherwise

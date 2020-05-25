@@ -415,7 +415,7 @@ classdef atompair < matlab.mixin.Copyable
         
         function [match,bvout] = match(matchLabel,bv,dipole,varargin)
             if dipole
-                args = varargin(1:end-1);
+                args = varargin;
                 L = matchLabel(1);
                 matchLabel = matchLabel(2:end);
             else
