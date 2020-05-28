@@ -19,6 +19,14 @@ classdef scattoptions
             %SCATTOPTIONS Constructs a SCATTOPTIONS object with the given
             %properties
             %
+            %   opt = scattoptions() constructs a scattoptions object with
+            %   default values
+            %
+            %   opt = scattoptions(varargin) constructs a scattoptions
+            %   object with property values given as name/value pairs.  For
+            %   instance, opt = scattoptions('rmax',1000) creates a
+            %   scattoptions object with rmax set to 1000.
+            %
             %   See also SCATTOPTIONS.SET
             self = self.setDefaults();
             self = self.set(varargin{:});
@@ -42,6 +50,11 @@ classdef scattoptions
         
         function self = set(self,varargin)
             %SET Sets properties using name/value pairs.
+            %
+            %   opt = opt.set(varargin) sets the scattoptions object
+            %   with property values given as name/value pairs.  For
+            %   instance, opt = opt.set('rmax',1000) creates a
+            %   scattoptions object with rmax set to 1000.
             if mod(numel(varargin),2)~=0
                 error('Must supply name/value pairs');
             else 

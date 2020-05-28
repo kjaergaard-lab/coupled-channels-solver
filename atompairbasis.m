@@ -1,37 +1,40 @@
-classdef atompair < matlab.mixin.Copyable
+classdef atompairbasis < matlab.mixin.Copyable
+    %ATOMPAIRBASIS Provides definitions of various basis vectors useful for
+    %calculating scattering and bound state properties
     properties
-        atoms
-        pair
+        atoms       %A 1x2 cell array of ATOMPROPERTIES objects
+        pair        %A character string indicating what BO potential to use
         
-        espin
-        nspin
+        espin       %The electron spin -- always 0.5
+        nspin       %A 1x2 array of nuclear spins
         
-        symmetry
-        mass
-        Ahfs
-        gS
-        gI
+        symmetry    %The symmetry of the atom pair: 0 for distinguishable particles, and +/-1 for bosons/fermions
+        mass        %The reduced mass of the atom pair
+        Ahfs        %A 1x2 array of hyperfine constants in MHz
+        gS          %A 1x2 array of electron g-factors
+        gI          %A 1x2 array of nuclear g-factors
         
-        scale
+        scale       %A scale factor converting cm^{-1} to inverse square wavenumbers in Angstrom^{-2}
         
-        Nchannels
-        L
-        bv1
-        bv2
-        bv3
-        bv4
-        bv5
-        bvint
+        Nchannels   %The number of channels
+        L           %A diagonal matrix of L values
+        bv1         %Basis vectors in uncoupled basis: [L mL mS1 mI1 mS2 mI2]
+        bv2         %Basis vectors in electron spin coupled basis S = S1+S2: [L mL S mS mI1 mI2]
+        bv3         %Basis vectors in electron+nuclear spin coupled basis F = S+I: [L mL F1 mF1 F2 mF2]
+        bvint       %Basis vectors in the internal basis: [L mL mF1 mF2 int1 int2]
         
-        bt21
-        bt31
-        bt32
-        bt43
-        bt54
+        bt21        %Transformation matrix from basis 1 to basis 2
+        bt31        %Transformation matrix from basis 1 to basis 3
+        bt32        %Transformation matrix from basis 2 to basis 3
     end
     
     methods
-        function self = atompair(pair,Lvec)
+        function self = atompairbasis(pair,Lvec)
+            %ATOMPAIRBASIS Constructs an instance of the ATOMPAIRBASIS
+            %class
+            %
+            %   basis = ATOMPAIRBASIS(pair,Lvec) constructs an object for
+            %   the given pair (a character string) and vector of L values
             self.espin = 0.5;
             switch pair
                 case {'KRb','K40Rb87'}
@@ -88,11 +91,14 @@ classdef atompair < matlab.mixin.Copyable
         end
         
         function self = makeBasisVectors(self,LVec)
+            %MAKEBASISVECTORS Creates basis vectors given a vector of L
+            %values
+            %
+            %   self = MAKEBASISVECTORS(LVec) creates basis vectors for a
+            %   given vector of L values
             self.bv1 = zeros(self.Nchannels,6);
             self.bv2 = zeros(self.Nchannels,6);
             self.bv3 = zeros(self.Nchannels,6);
-            self.bv4 = zeros(self.Nchannels,6);
-            self.bv5 = zeros(self.Nchannels,6);
             self.bvint = zeros(self.Nchannels,6);
             %% Basis state definitions
             % Fully uncoupled basis vectors BV1
@@ -168,59 +174,6 @@ classdef atompair < matlab.mixin.Copyable
                 end
             end
             
-            % Coupled total spin vectors BV4 F1+F2=F
-            % |L mL F1 F2 F mF>
-            count = 1;
-            for n1=1:numel(LVec)
-                for n2=1:(2*LVec(n1)+1)
-                    FVec1 = abs(self.espin-self.nspin(1)):(self.espin+self.nspin(1));
-                    for n3=1:numel(FVec1)
-                        FVec2 = abs(self.espin-self.nspin(2)):(self.espin+self.nspin(2));
-                        for n4=1:numel(FVec2)
-                            FVec = abs(FVec1(n3)-FVec2(n4)):(FVec1(n3)+FVec2(n4));
-                            for n5=1:numel(FVec)
-                                for n6=1:(2*FVec(n5)+1)
-                                    mL = -LVec(n1)+(n2-1);
-                                    F1 = FVec1(n3);
-                                    F2 = FVec2(n4);
-                                    F = FVec(n5);
-                                    mF = -F+(n6-1);
-                                    self.bv4(count,:) = [LVec(n1),mL,F1,F2,F,mF];
-                                    count = count+1;
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            
-            % Fully coupled basis vectors BV5 J=L+F=L+F1+F2=L+S1+S2+I1+I2
-            % |L F1 F2 F J mJ>
-            count = 1;
-            for n1=1:numel(LVec)
-                FVec1 = abs(self.espin-self.nspin(1)):(self.espin+self.nspin(1));
-                for n2=1:numel(FVec1)
-                    FVec2 = abs(self.espin-self.nspin(2)):(self.espin+self.nspin(2));
-                    for n3=1:numel(FVec2)
-                        FVec = abs(FVec1(n2)-FVec2(n3)):(FVec1(n2)+FVec2(n3));
-                        for n4=1:numel(FVec)
-                            JVec = abs(FVec(n4)-LVec(n1)):(FVec(n4)+LVec(n1));
-                            for n5=1:numel(JVec)
-                                for n6=1:(2*JVec(n5)+1)
-                                    F1 = FVec1(n2);
-                                    F2 = FVec2(n3);
-                                    F = FVec(n4);
-                                    J = JVec(n5);
-                                    mJ = -JVec(n5)+(n6-1);
-                                    self.bv5(count,:) = [LVec(n1),F1,F2,F,J,mJ];
-                                    count = count+1;
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-            
             % Basis of internal states, labelled from lowest energy BVint
             % |L mL Int1 Int2>
             count = 1;
@@ -254,6 +207,8 @@ classdef atompair < matlab.mixin.Copyable
         end
         
         function self = makeBasisTransformations(self)
+            %MAKEBASISTRANSFORMATIONS Creates basis transformation matrices
+            
             % Transformation matrix from fully uncoupled to spin-coupled basis
             self.bt21 = zeros(self.Nchannels);
             for row=1:self.Nchannels
@@ -287,76 +242,60 @@ classdef atompair < matlab.mixin.Copyable
             
             % Transformation matrix from spin-coupled basis to spin-nucleus coupled basis
             self.bt32 = self.bt31*(self.bt21');
-            
-            % Transformation matrix from spin-nucleus basis to total spin coupled
-            self.bt43 = zeros(self.Nchannels);
-            for row=1:self.Nchannels
-                for col=1:self.Nchannels
-                    mLMatch = self.bv3(col,2)==self.bv4(row,2);
-                    LMatch = self.bv3(col,1)==self.bv4(row,1);
-                    FMatch1 = self.bv3(col,3)==self.bv4(row,3);
-                    FMatch2 = self.bv3(col,5)==self.bv4(row,4);
-                    FMatch = FMatch1 && FMatch2;
-                    mFSumMatch = (self.bv3(col,4)+self.bv3(col,6))==self.bv4(row,6);
-                    if mLMatch && LMatch && mFSumMatch && FMatch
-                        self.bt43(row,col) = ClebschGordan(self.bv3(col,3),self.bv3(col,5),self.bv4(row,5),self.bv3(col,4),self.bv3(col,6),self.bv4(row,6));
-                    end
-                end
-            end
-            
-            % Transformation matrix from total-spin coupled basis to fully coupled
-            self.bt54 = zeros(self.Nchannels);
-            for row=1:self.Nchannels
-                for col=1:self.Nchannels
-                    LMatch = self.bv4(col,1)==self.bv5(row,1);
-                    FMatch1 = self.bv4(col,3)==self.bv5(row,2);
-                    FMatch2 = self.bv4(col,4)==self.bv5(row,3);
-                    FTotalMatch = self.bv4(col,5)==self.bv5(row,4);
-                    FMatch = FMatch1 && FMatch2 && FTotalMatch;
-                    mJSumMatch = (self.bv4(col,2)+self.bv4(col,6))==self.bv5(row,6);
-                    if LMatch && FMatch && mJSumMatch
-                        self.bt54(row,col) = ClebschGordan(self.bv4(col,1),self.bv4(col,5),self.bv5(row,5),self.bv4(col,2),self.bv4(col,6),self.bv5(row,6));
-                    end
-                end
-            end
         end
         
-        function restrict(self,initLabel,dipole)
+        function self = restrict(self,initLabel,dipole)
+            %RESTRICT Restricts the basis vectors to an appropriate
+            %subspace appropriate to the problem
+            %
+            %   self = restrict(initLabel,dipole) restricts the basis
+            %   vector based on the initial state label and whether or not
+            %   to include the dipole-dipole interaction.
+            %
+            %   initLabel is a 4-element vector [L mL int1 int2] and dipole
+            %   is a true/false value.
+            %
+            %   For dipole = false, subspace restriction keeps states with
+            %   the same L, mL, and mF1+mF2.
+            %
+            %   For dipole = true, subspace restriction keeps states with
+            %   the same mL+mF1+mF2 and L values that have the same parity
             initIdx = self.findstate(self.bvint(:,[1,2,5,6]),initLabel);
             if dipole
                 %Restriction to same mL+mF1+mF2 = mJ and L= ' L-2,L,L+2
                 totalM = initLabel(2)+sum(self.bvint(initIdx,[3,4]),2);
                 matchLabel = [initLabel(1) totalM];
                 [~,self.bvint] = self.match(matchLabel,self.bvint,dipole,2:4);
-                initIdx = self.findstate(self.bvint(:,[1,2,5,6]),initLabel);
                 
                 [match1,self.bv1] = self.match(matchLabel,self.bv1,dipole,2:6);
                 [match2,self.bv2] = self.match(matchLabel,self.bv2,dipole,[2,4:6]);
                 [match3,self.bv3] = self.match(matchLabel,self.bv3,dipole,[2,4,6]);
-                [match4,self.bv4] = self.match(matchLabel,self.bv4,dipole,[2,6]);
-%                 [match5,self.bv5] = self.match(matchLabel,self.bv5,dipole,6);
             else
                 %Restriction to same mF=mF1+mF2 AND same L AND mL
                 totalM = sum(self.bvint(initIdx,[3,4]),2);
                 matchLabel = [initLabel(1:2) totalM];
                 [~,self.bvint] = self.match(matchLabel,self.bvint,dipole,1,2,3:4);
-                initIdx = self.findstate(self.bvint(:,[1,2,5,6]),initLabel);
                 
                 [match1,self.bv1] = self.match(matchLabel,self.bv1,dipole,1,2,3:6);
                 [match2,self.bv2] = self.match(matchLabel,self.bv2,dipole,1,2,4:6);
                 [match3,self.bv3] = self.match(matchLabel,self.bv3,dipole,1,2,[4,6]);
-                [match4,self.bv4] = self.match(matchLabel,self.bv4,dipole,1,2,6);
-%                 [match5,self.bv5] = self.match(matchLabel,self.bv5,dipole,1,2,6);
             end
             self.bt21 = self.bt21(match2,match1);
             self.bt31 = self.bt31(match3,match1);
-            self.bt43 = self.bt43(match4,match3);
+            self.bt32 = self.bt31*self.bt21';
             self.L = diag(self.bv1(:,1));
             self.Nchannels = size(self.L,1);
         end
         
 
         function ops = makeOperators(self,B,initLabel,dipole)
+            %MAKEOPERATORS Creates an ALKALIOPERATORS object based on the
+            %current basis vectors
+            %
+            %   ops = makeOperators(B,initLabel,dipole) creates
+            %   ALKALIOPERATORS object ops given a magnetic field B (in
+            %   Tesla), an initial state label [L mL int1 int2], and
+            %   whether or not to use the dipole-dipole interaction dipole
             Hint0_1 = 0.5*(self.bv3(:,3).*(self.bv3(:,3)+1)-self.espin*(self.espin+1)-self.nspin(1)*(self.nspin(1)+1));
             Hint0_2 = 0.5*(self.bv3(:,5).*(self.bv3(:,5)+1)-self.espin*(self.espin+1)-self.nspin(2)*(self.nspin(2)+1));
             Hint0 = const.h*1e6/const.kb*const.K2A(self.mass)*diag(self.Ahfs(1)*Hint0_1+self.Ahfs(2)*Hint0_2);  %In BV3, as inverse wavenumbers [Angstroms^{-2}]
@@ -410,10 +349,37 @@ classdef atompair < matlab.mixin.Copyable
     
     methods(Static)
         function idx = findstate(bv,vec)
+            %FINDSTATE Returns the index corresponding to a vector in a
+            %set of basis vectors
+            %
+            %   idx = atompairbasis.findstate(bv,vec) finds the index idx
+            %   corresponding to vec in bv
             idx = all(bv==repmat(vec,size(bv,1),1),2);
         end
         
         function [match,bvout] = match(matchLabel,bv,dipole,varargin)
+            % MATCH Finds states in BV that have the same values using
+            % matchLabel
+            %   [match,bvout]=match(matchLabel,bv,dipole,i1,i2,...,iN)
+            %   finds all states in bv with the same quantum numbers
+            %   defined by matchLabel and whether or not to include the
+            %   dipole-dipole interaction dipole.  The indices in bv to
+            %   look at are defined by i1,i2,...,iN.  If any of iN are
+            %   vectors with more than one element, the matched quantity is
+            %   summed.  So, for instance, matchLabel=[0,0,5] and i1=1,
+            %   i2=2, and i3=3:4 looks for rows in bv where the first
+            %   element is equal to 0, the second is equal to 0, and the
+            %   sum of the third and fourth elements is equal to 5.  Vector
+            %   M is a logical vector that selects the matching elements,
+            %   and BVout is the restricted version of BV that satisfies
+            %   the matching condition.
+            %
+            %   [match,bvout]=match(matchLabel,bv,dipole,idx) matches
+            %   quantum numbers according to dipole-dipole selection rules.
+            %   The first element in matchLabel is assumed to be the value
+            %   of L, and bv rows with L values that have the same parity.
+            %   idx is the vector of indices defining all the angular
+            %   momentum projections, such that mJ=sum(bv(:,idx),2)
             if dipole
                 args = varargin;
                 L = matchLabel(1);

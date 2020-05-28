@@ -1,5 +1,20 @@
 function mout = manolopoulos(E,ops,basis,opt)
-
+%manolopoulos Integrates the matrix Riccati equation using the improved
+%log-derivative method of D. E. Manolopoulos
+%
+%   mout = manolopoulos(E,ops,basis,opt) integrates the matrix Riccati
+%   equation outwards assuming an energy E.
+%
+%   ops is an instance of ALKALIOPERATORS
+%
+%   basis is an instance of ATOMPAIR
+%
+%   opt is an instance of SCATTOPTIONS
+%
+%   mout is either the scattering matrix, when opt.getwf = false, or a
+%   structure with fields S (scattering matrix) and wf (radial wavefunction
+%   structures).  wf is a structure with fields r (radial position) and u
+%   (radial wavefunctions for each channel)
 
 %% Prep
 I = eye(ops.Nch);
@@ -66,19 +81,19 @@ for jj=1:numBlocks
         
         if opt.getwf
             Z(:,:,nn+1) = Zac*Zcb;
-            rout = [rout rb(2:end)]; %#ok<AGROW>
         end
     end
     
     if opt.getwf
         Zout(:,:,end+1:end+size(Z,3)-1) = Z(:,:,2:end);
+        rout = [rout rb(2:end)]; %#ok<AGROW>
     end
     
     if ~changeFlag && rend>=10
         changeFlag = true;
         ops = ops.rotate;
         Ynew = ops.U*Ynew*ops.U';
-        if nargout>1
+        if opt.getwf
             for kk=1:size(Zout,3)
                 Zout(:,:,kk) = ops.U*Zout(:,:,kk)*ops.U';
             end

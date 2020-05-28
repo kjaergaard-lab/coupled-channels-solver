@@ -1,9 +1,9 @@
-function [Output,wf,S] = MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
-% MultiChannel computes the scattering properties of a pair of alkali metal
+function [sm,wf] = MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
+% MultiChannel Computes the scattering properties of a pair of alkali metal
 % atoms
-%   Usage 1: MultiChannel(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,DipoleFlag,IntParams)
+%   Usage 1: MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
 %
-%   InitStateLabel is four-element row vector [L,mL,State1,State2]
+%   initLabel is four-element row vector [L,mL,State1,State2]
 %   specifying the entrance channel.  L is the angular momentum, mL is its
 %   projection, State1 and State2 are the internal states of the atoms,
 %   labelled in increasing ground state energy in the presence
@@ -13,42 +13,30 @@ function [Output,wf,S] = MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
 %   Ein and Bin specify entrance channel energies and magnetic fields in uK
 %   and G, respectively.  Only one of these can have more than one element
 %
-%   OutputFile is the name of the output .mat file where the results are
+%   outputFile is the name of the output .mat file where the results are
 %   saved.  If empty, the results are not saved
 %
-%   BasisSetFile is the name of the .mat file that specifies the species,
-%   constants, potential functions, and basis vectors and their
-%   transformations
+%   basis is either the file name of the .mat file storing the basis
+%   information or is a variable of type ATOMPAIR containing the basis
+%   information
 %
-%   DipoleFlag=0,1 sets whether or not to include the magnetic
-%   dipole-dipole interaction between valence electrons.  Including it is
-%   more accurate but uses more resources.
+%   opt is an instance of SCATTOPTIONS containing options for the
+%   integration of the coupled channels equations
 %
-%   IntParams is a structure that sets integration parameters.  rMin is the
-%   starting distance of integration in Angstroms (cannot be 0). rMax is
-%   the final distance - 500 angstroms seems to work well. dr_scale sets
-%   the spatial step size as a fraction of the WKB wavelength.  Smaller
-%   numbers are more accurate but take longer. drMin and drMax set minimum
-%   and maximum step sizes. ParSet=0,1 sets whether or not to use parallel
-%   processing.  Default values are
-%   IntParams.rMin=1e-1;
-%   IntParams.rMax=500;
-%   IntParams.dr_scale=1e-2;
-%   IntParams.drMax=500;
-%   IntParams.drMin=1e-3;
-%   IntParams.ParSet=1;
+%   Usage 2: [sm,wf] = MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
+%   sm is an instance of the ScatteringMatrix class which contains all the
+%   scattering information.  wf are the output radial wavefunctions which
+%   are calculated when opt.getwf = true.  It an array of structures with
+%   fields r (radial position) and u (wavefunctions) with dimensions 
+%   (Nchannels x numel(r)) 
 %
-%   Usage 2: Output=MultiChannel(InitStateLabel,Ein,Bin,OutputFile,BasisSetFile,DipoleFlag,IntParams)
-%   Output is a structure with fields: k, S, T, S2, T2, and OutIdx
-%
-%   See also BasisSetGeneration, CalculatePartialCrossSection, FitResonance
 
 
 %% Load basis set and restrict to particular subspace
 if isa(basis,'atompair')
     basis = copy(basis);
 elseif ischar(basis)
-    V = load(basisSetFile,'basis');
+    V = load(basis,'basis');
     basis = V.basis;
 else
     error('Basis set is neither a file nor a variable of type ''atompair''');
@@ -77,7 +65,6 @@ end
 E = Ein*1e-6*const.K2A(basis.mass); %Convert from uK to inverse wavenumbers
 B = Bin*1e-4;                       %Convert from G to T
 
-
 %% Generate operators/terms in Hamiltonian
 disp('Constructing basis sets');
 if eflag
@@ -87,7 +74,6 @@ else
         ops(nn,1) = basis.makeOperators(B(nn),initLabel,opt.dipole); %#ok<AGROW>
     end
 end
-
 
 %% Loop over inputs
 disp('Basis sets constructed.  Starting integration');
@@ -125,75 +111,34 @@ else
 end
 
 %% Calculate output quantities
-T = S-repmat(eye(basis.Nchannels),[1,1,Nruns]); %T-matrix is just S-1
 if basis.symmetry~=0
     [Ssym,BVSymInt,ia] = SymmetrizeSMatrixArbL(S,basis.bvint,basis.symmetry);
     if opt.getwf
         for nn=1:numel(wf)
-            wf{nn}.u = wf{nn}.u(ia,:);
+            wf(nn).u = wf(nn).u(ia,:);
         end
     end
     tmp = size(Ssym);
     if Nruns==1
         tmp(3) = 1;
     end
-    Tsym = Ssym-repmat(eye(tmp(1:2)),[1,1,tmp(3)]);
     OutIdx = find(all(BVSymInt(:,[1,2,5,6])==repmat([initLabel(1:2),sort(initLabel(3:4),2)],tmp(1),1),2));
-    
-    if Nruns==1
-        S2 = Ssym(OutIdx,:).';
-        T2 = Tsym(OutIdx,:).';
-    else
-        S2 = shiftdim(Ssym,2);
-        S2 = squeeze(S2(:,:,OutIdx));
-        T2 = shiftdim(Tsym,2);
-        T2 = squeeze(T2(:,:,OutIdx));
-    end
-    Output.bvsym = BVSymInt;
-    Output.S = Ssym;
-    Output.T = Tsym;
 else    
     OutIdx = basis.findstate(basis.bvint(:,[1,2,5,6]),initLabel);
-    
-    if Nruns==1
-        S2 = S(OutIdx,:).';
-        T2 = T(OutIdx,:).';
-    else
-        S2 = shiftdim(S,2);
-        S2 = squeeze(S2(:,:,OutIdx));
-        T2 = shiftdim(T,2);
-        T2 = squeeze(T2(:,:,OutIdx));
-    end
-    Output.bvint = basis.bvint;
-    Output.S = S;
-    Output.T = T;
+
 end
 
-if eflag
-    k = sqrt(2*basis.mass/const.hbar^2*E(:)*1e-6*const.kb);
+if basis.symmetry==0
+    sm = ScatteringMatrix(S,basis.bvint,basis.symmetry,OutIdx);
 else
-    k = sqrt(2*basis.mass/const.hbar^2*E(:)*1e-6*const.kb);
+    sm = ScatteringMatrix(Ssym,BVSymInt,basis.symmetry,OutIdx);
 end
+sm.mass = basis.mass;
+sm.E = Ein;
+sm.B = Bin;
 
-Output.k = k;
-Output.S2 = S2;
-Output.T2 = T2;
-Output.OutIdx = OutIdx;
-Output.mass = basis.mass;
-Output.Ein = Ein;
-Output.Bin = Bin;
-
-if size(S,3)>1
-    if basis.symmetry==0
-        sm = ScatteringMatrix(S,basis.bvint,basis.symmetry,OutIdx);
-    else
-        sm = ScatteringMatrix(Ssym,BVSymInt,basis.symmetry,OutIdx);
-    end
-    sm.mass = basis.mass;
-    sm.E = Ein;
-    sm.B = Bin;
-
-    Output = sm;
+if ~opt.getwf
+    wf = [];
 end
 
 if ~isempty(outputFile)

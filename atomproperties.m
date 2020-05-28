@@ -1,14 +1,26 @@
 classdef atomproperties < handle
+    %ATOMPROPERTIES An abstract class for describing atomic ground state
+    %properties
     properties(Abstract,Constant)
-        mass
-        nspin
-        Ahfs
-        gI
-        gS
+        mass    %Mass of the atom
+        nspin   %Nuclear spin
+        Ahfs    %Hyperfine constant in MHz
+        gI      %Nuclear g-factor
+        gS      %Electronic g-factor
     end
     
     methods
         function [E,V,Hint,label] = hyperfineSolve(self,B)
+            %HYPERFINESOLVE Solves the ground-state hyperfine+zeeman
+            %Hamiltonian
+            %
+            %   [E,V,Hint,label] = hyperfineSolve(self,B) solves the
+            %   ground-state hyperfine+zeeman Hamiltonian for a particular
+            %   magnetic field in Tesla.  E is a vector of eigenenergies, V
+            %   is the transformation matrix from the eigenvectors to the
+            %   uncoupled m_s and m_i states.  Hint is the total
+            %   hyperfine+zeeman Hamiltonian.  label is the state labels in
+            %   the uncoupled m_s, m_i basis
             S = 0.5;
             I = self.nspin;
             NI = 2*I+1;
