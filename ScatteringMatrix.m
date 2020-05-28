@@ -89,7 +89,7 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
                 initState = varargin{1};
                 finalState = varargin{2};
             end
-            cs = CalculatePartialCrossSection(self.Tfull,self.bv(:,[1,2,5,6]),self.k,initState,finalState,self.symmetry);
+            cs = self.partialCrossSec(self.Tfull,self.bv(:,[1,2,5,6]),self.k,initState,finalState,self.symmetry);
         end
         
         function self = plotCrossSections(self)
@@ -186,6 +186,52 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
                 end
             end
         end
+    end
+    
+    methods(Static)
+       function cs = partialCrossSec(T,bv,k,initState,finalState,identical)
+           % partialCrossSec Calculates partial cross sections
+           %   cross_sec=partialCrossSec(T,bv,k,initState,finalState) with T the
+           %   full T-matrix, bv the basis vectors of T, k the wavenumber, and
+           %   initState and finalState are denoted by the [Int1,Int2] state labels
+           
+           InitIdx = atompairbasis.findstate(bv(:,3:4),initState);
+           FinalIdx = atompairbasis.findstate(bv(:,3:4),finalState);
+           
+           InLRange=unique(bv(InitIdx,1));
+           InMLRange=unique(bv(InitIdx,2));
+           OutLRange=unique(bv(FinalIdx,1));
+           OutMLRange=unique(bv(FinalIdx,2));
+           
+           cs=zeros(size(T,3),1);
+           for n1=1:numel(InLRange)
+               for n2=1:numel(InLRange)
+                   for n3=1:numel(OutLRange)
+                       for n4=1:numel(OutMLRange)
+                           for n5=1:numel(InMLRange)
+                               for n6=1:numel(InMLRange)
+                                   L1=InLRange(n1);
+                                   L2=InLRange(n2);
+                                   L=OutLRange(n3);
+                                   mL=OutMLRange(n4);
+                                   mL1=InMLRange(n5);
+                                   mL2=InMLRange(n6);
+                                   idx1=atompairbasis.findstate(bv,[L1,mL1,initState]);
+                                   idx2=atompairbasis.findstate(bv,[L2,mL2,initState]);
+                                   idx3=atompairbasis.findstate(bv,[L,mL,finalState]);
+                                   cs=cs+squeeze(1i^(L2-L1).*sqrt((2*L1+1).*(2*L2+1)).*conj(T(idx3,idx1,:)).*T(idx3,idx2,:));
+                               end
+                           end
+                       end
+                   end
+               end
+           end
+           if nargin <6
+               identical = 0;
+           end
+           
+           cs = (1+identical*(finalState(1)==finalState(2)))*pi./k.^2.*real(cs);
+       end
     end
     
     

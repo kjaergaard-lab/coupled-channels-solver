@@ -33,13 +33,13 @@ function [sm,wf] = MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
 
 
 %% Load basis set and restrict to particular subspace
-if isa(basis,'atompair')
+if isa(basis,'atompairbasis')
     basis = copy(basis);
 elseif ischar(basis)
     V = load(basis,'basis');
     basis = V.basis;
 else
-    error('Basis set is neither a file nor a variable of type ''atompair''');
+    error('Basis set is neither a file nor a variable of type ''atompairbasis''');
 end
 basis.restrict(initLabel,opt.dipole);
 
