@@ -1,4 +1,5 @@
 classdef boundoptions
+% BOUNDOPTIONS Defines options for bound state solving
     properties
         stopAtRoot  %Stop integration at a root in the log-derivative
         stopAtR     %Stop at a particular value of r
@@ -23,18 +24,31 @@ classdef boundoptions
         blocksize   %Size of blocks with which to calculate dr
         blocks      %Indices of blocks
         
-        usedipole   %Include dipole-dipole interaction
+        dipole   %Include dipole-dipole interaction
         changeR     %R value at which to change bases
         
     end
     
     methods
         function opt = boundoptions(varargin)
+            %BOUNDOPTIONS Constructs a BOUNDOPTIONS object with the given
+            %properties
+            %
+            %   opt = boundoptions() constructs a boundoptions object with
+            %   default values
+            %
+            %   opt = boundoptions(varargin) constructs a boundoptions
+            %   object with property values given as name/value pairs.  For
+            %   instance, opt = boundoptions('rmax',1000) creates a
+            %   boundoptions object with rmax set to 1000.
+            %
+            %   See also BOUNDOPTIONS.SET
             opt = opt.setDefaults;
             opt = opt.set(varargin{:});
         end
         
         function opt = setDefaults(opt)
+            %SETDEFAULTS Sets the default values for this object
             opt.stopAtRoot = false;
             opt.stopAtR = false;
             opt.stopAfterR = false;
@@ -57,11 +71,17 @@ classdef boundoptions
             opt.drscale = 1e-2;
             opt.blocksize = 15;
             
-            opt.usedipole = false;
+            opt.dipole = false;
             opt.changeR = 10;
         end
         
         function opt = set(opt,varargin)
+            %SET Sets properties using name/value pairs.
+            %
+            %   opt = opt.set(varargin) sets the boundoptions object
+            %   with property values given as name/value pairs.  For
+            %   instance, opt = opt.set('rmax',1000) returns a
+            %   boundoptions object with rmax set to 1000.
             if mod(numel(varargin),2)~=0
                 error('Must supply name/value pairs');
             else 

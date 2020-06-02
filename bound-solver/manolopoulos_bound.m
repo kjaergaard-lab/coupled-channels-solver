@@ -1,23 +1,48 @@
-function varargout = manolopoulos(r,Vfunc,E,ops,opt)
-
+function varargout = manolopoulos_bound(r,E,ops,opt)
+%manolopoulos_bound Integrates the matrix Riccati equation using the
+%improved log-derivative method of D. E. Manolopoulos for bound state
+%problems
+%
+%   [Y,rf,nodes] = manolopoulos_bound(r,E,ops,opt) integrates the matrix Riccati
+%   equation outwards assuming an energy E.
+%
+%   ops is an instance of ALKALIOPERATORS
+%
+%   opt is an instance of SCATTOPTIONS.  Relevant properties are:
+%
+%   output: set to true to generate wavefunctions
+%   direction: direction to integrate.  Set to +1 for forward integration, and -1 for backward integration
+%   stopAtRoot: stops integration when a root is encountered
+%   stopAtR: stops integration when a particular value of r is encountered 
+%   stopAfterR: stops integration after a particular value of r is encountered
+%
+%   Y is the last iteration of the log-derivative matrix.  rf is the final
+%   separation at which integration stops.  nodes is the number of poles in
+%   the log-derivative matrix that were encountered (only works for forward
+%   integration).
+%
+%   If opt.output = true, then one can use [Y,rf,nodes,rout,Yout,Z,dbg] =
+%   ... for additional output arguments.  rout is the vector of
+%   separations, Yout is all of the log-derivative matrices, Z is the
+%   transformation matrices used for constructing wavefunctions, and dbg is
+%   a debugging structure.
 %% Parse arguments
-if nargin<5
+if nargin<4
     opt = boundoptions;
 elseif ~isa(opt,'boundoptions')
     error('Options argument ''opt'' must be of type boundoptions');
 end
 
 %% Prep
-I = eye(size(ops.L));
-Nch = size(I,1);
+I = eye(ops.Nch);
 if opt.direction>0
     ops = ops.int2spin;
-    Ynew = real(sqrt(Vfunc(r(1),ops.scale,ops.L,ops.SpinProj,ops.Hdd,ops.H0)+ops.Hint-E*I));
+    Ynew = real(sqrt(ops.potential(r(1),E))).*I;
 elseif opt.direction<0
     r = flip(r);
     opt.blocks = rot90(numel(r)-opt.blocks+1,2);
     ops = ops.spin2int;
-    Ynew = real(sqrt(Vfunc(r(1),ops.scale,ops.L,ops.SpinProj,ops.Hdd,ops.H0)+ops.Hint-E*I));
+    Ynew = real(sqrt(ops.potential(r(1),E))).*I;
     Ynew = ops.U*Ynew*ops.U';
     ops = ops.rotate;
 end
@@ -34,15 +59,14 @@ vecANew = vecNew;
 
 
 if opt.output
-    Y = zeros(Nch,Nch,numel(r));
+    Y = zeros(ops.Nch,ops.Nch,numel(r));
     Y(:,:,1) = Ynew;
-    Zout = zeros(Nch,Nch,numel(r));
-    eigOut = zeros(Nch,numel(r));
+    Zout = zeros(ops.Nch,ops.Nch,numel(r));
+    eigOut = zeros(ops.Nch,numel(r));
     eigOut(:,1) = eigNew;
 end
 
 breakFlag = false;
-changeFlag = false;
 nodes = zeros(numel(r),1);
 dbg.test = zeros(numel(r),1);
 gcnt = 1;
@@ -51,9 +75,8 @@ for bb=1:size(opt.blocks,1)
     rb = r(opt.blocks(bb,1):opt.blocks(bb,2));
     h = (rb(2)-rb(1))/2;
 %     Epot = repmat(E*I,1,1,numel(rb));
-    M = Vfunc(rb,ops.scale,ops.L,ops.SpinProj,ops.Hdd,ops.H0)+ops.Hint-E*I;
-    M2 = Vfunc(rb+h,ops.scale,ops.L,ops.SpinProj,ops.Hdd,ops.H0)+ops.Hint-E*I;
-    
+    M = ops.potential(rb,E);
+    M2 = ops.potential(rb+h,E);
     %% Solve
     for nn=1:numel(rb)-1
         p2 = diag(M2(:,:,nn));
@@ -83,7 +106,7 @@ for bb=1:size(opt.blocks,1)
         vecNew = gramschmidt(vecNew);
         minEigNew = Inf;
         maxEigNew = 0;
-        for kk=1:Nch
+        for kk=1:ops.Nch
             eigTest = abs(eigNew(kk));
             if eigTest<minEigNew
                 minEigNew = eigTest;
@@ -92,10 +115,10 @@ for bb=1:size(opt.blocks,1)
             end
         end
         
-        for knew=1:Nch
+        for knew=1:ops.Nch
             l2dist = 0;
             l2idx = 0;
-            for kold=1:Nch
+            for kold=1:ops.Nch
                 l2Test = abs(vecNew(:,knew)'*vecAOld(:,kold));
                 if l2Test>=l2dist
                     l2dist = l2Test;
@@ -113,7 +136,7 @@ for bb=1:size(opt.blocks,1)
         end
         
         dnodes = 0;
-        for kk=1:Nch
+        for kk=1:ops.Nch
 %             if sign(eigAOld(kk)) ~= sign(eigANew(kk))
             if opt.direction>0 && eigAOld2(kk)<0 && eigAOld(kk)<0 && eigANew(kk)>0
                 if (sign(eigANew(kk)-eigAOld(kk)) ~= sign(eigAOld(kk)-eigAOld2(kk))) && (abs(eigANew(kk))>0.1 || abs(eigAOld(kk))>0.1)
@@ -144,30 +167,6 @@ for bb=1:size(opt.blocks,1)
         if breakFlag
             break;
         end
-%         elseif ~changeFlag && ((rb(nn+1)>=opt.changeR && opt.direction>0) || (rb(nn+1)<=opt.changeR && opt.direction<0))
-%             changeFlag = true;
-%             ops = ops.rotate;
-%             Ynew = ops.U*Ynew*ops.U';
-%             [vecNew,eigNew] = eig(Ynew,'vector');
-%             vecNew = gramschmidt(vecNew);
-%             v = vecNew;
-%             for knew=1:Nch
-%                 for kold=1:Nch
-%                     if abs(eigNew(knew)-eigANew(kold))<1e-9
-%                         v(:,kold) = vecNew(:,knew);
-%                         break;
-%                     end
-%                 end
-%             end
-%             vecANew = v;
-%             
-%             if opt.output
-%                 for gg=1:gcnt
-%                     Y(:,:,gg) = ops.U*Y(:,:,gg)*ops.U';
-%                     Zout(:,:,gg) = ops.U*Zout(:,:,gg)*ops.U';
-%                 end
-%             end
-%         end
     end
     
     if breakFlag

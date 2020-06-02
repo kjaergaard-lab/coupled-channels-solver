@@ -1,6 +1,7 @@
-function mout = manolopoulos(E,ops,basis,opt)
-%manolopoulos Integrates the matrix Riccati equation using the improved
-%log-derivative method of D. E. Manolopoulos
+function mout = manolopoulos_scatt(E,ops,basis,opt)
+%manolopoulos_scatt Integrates the matrix Riccati equation using the
+%improved log-derivative method of D. E. Manolopoulos for scattering
+%problems
 %
 %   mout = manolopoulos(E,ops,basis,opt) integrates the matrix Riccati
 %   equation outwards assuming an energy E.

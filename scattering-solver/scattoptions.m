@@ -53,7 +53,7 @@ classdef scattoptions
             %
             %   opt = opt.set(varargin) sets the scattoptions object
             %   with property values given as name/value pairs.  For
-            %   instance, opt = opt.set('rmax',1000) creates a
+            %   instance, opt = opt.set('rmax',1000) returns a
             %   scattoptions object with rmax set to 1000.
             if mod(numel(varargin),2)~=0
                 error('Must supply name/value pairs');

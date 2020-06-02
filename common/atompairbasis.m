@@ -244,36 +244,33 @@ classdef atompairbasis < matlab.mixin.Copyable
             self.bt32 = self.bt31*(self.bt21');
         end
         
-        function self = restrict(self,initLabel,dipole)
+        function self = restrict(self,label,dipole)
             %RESTRICT Restricts the basis vectors to an appropriate
             %subspace appropriate to the problem
             %
-            %   self = restrict(initLabel,dipole) restricts the basis
-            %   vector based on the initial state label and whether or not
+            %   self = restrict(label,dipole) restricts the basis
+            %   vector based on the initial state and whether or not
             %   to include the dipole-dipole interaction.
             %
-            %   initLabel is a 4-element vector [L mL int1 int2] and dipole
-            %   is a true/false value.
+            %   initLabel is a 3-element vector [L mL mF] where mF is the
+            %   total spin projection and dipole is a true/false value.
             %
             %   For dipole = false, subspace restriction keeps states with
-            %   the same L, mL, and mF1+mF2.
+            %   the same L, mL, and mF.
             %
             %   For dipole = true, subspace restriction keeps states with
-            %   the same mL+mF1+mF2 and L values that have the same parity
-            initIdx = self.findstate(self.bvint(:,[1,2,5,6]),initLabel);
+            %   the same mL+mF and L values that have the same parity
             if dipole
-                %Restriction to same mL+mF1+mF2 = mJ and L= ' L-2,L,L+2
-                totalM = initLabel(2)+sum(self.bvint(initIdx,[3,4]),2);
-                matchLabel = [initLabel(1) totalM];
+                %Restriction to same mL+mF = mJ and L= ' L-2,L,L+2
+                matchLabel = [label(1) sum(label(2:3))];
                 [~,self.bvint] = self.match(matchLabel,self.bvint,dipole,2:4);
                 
                 [match1,self.bv1] = self.match(matchLabel,self.bv1,dipole,2:6);
                 [match2,self.bv2] = self.match(matchLabel,self.bv2,dipole,[2,4:6]);
                 [match3,self.bv3] = self.match(matchLabel,self.bv3,dipole,[2,4,6]);
             else
-                %Restriction to same mF=mF1+mF2 AND same L AND mL
-                totalM = sum(self.bvint(initIdx,[3,4]),2);
-                matchLabel = [initLabel(1:2) totalM];
+                %Restriction to same mF AND same L AND mL
+                matchLabel = label;
                 [~,self.bvint] = self.match(matchLabel,self.bvint,dipole,1,2,3:4);
                 
                 [match1,self.bv1] = self.match(matchLabel,self.bv1,dipole,1,2,3:6);
@@ -288,13 +285,18 @@ classdef atompairbasis < matlab.mixin.Copyable
         end
         
 
-        function ops = makeOperators(self,B,initLabel,dipole)
+        function ops = makeOperators(self,B,initLabel,dipole,refType)
             %MAKEOPERATORS Creates an ALKALIOPERATORS object based on the
             %current basis vectors
             %
             %   ops = makeOperators(B,initLabel,dipole) creates
             %   ALKALIOPERATORS object ops given a magnetic field B (in
             %   Tesla), an initial state label [L mL int1 int2], and
+            %   whether or not to use the dipole-dipole interaction dipole
+            %
+            %   ops = makeOperators(B,initLabel,dipole,'bound') creates
+            %   ALKALIOPERATORS object ops given magnetic field B (in
+            %   Tesla), an initial state label [L mL mF], and
             %   whether or not to use the dipole-dipole interaction dipole
             Hint0_1 = 0.5*(self.bv3(:,3).*(self.bv3(:,3)+1)-self.espin*(self.espin+1)-self.nspin(1)*(self.nspin(1)+1));
             Hint0_2 = 0.5*(self.bv3(:,5).*(self.bv3(:,5)+1)-self.espin*(self.espin+1)-self.nspin(2)*(self.nspin(2)+1));
@@ -331,7 +333,13 @@ classdef atompairbasis < matlab.mixin.Copyable
             BT2int = self.bt21*BT1int;
             %% Change reference level for internal Hamiltonian
             Hint = BT1int'*Hint*BT1int;
-            initIdx = self.findstate(self.bvint(:,[1,2,5,6]),initLabel);
+            if nargin<5 || strcmpi(refType,'scatt')
+                initIdx = self.findstate(self.bvint(:,[1,2,5,6]),initLabel);
+            elseif strcmpi(refType,'bound')
+                [~,initIdx] = min(diag(Hint));
+            else
+                error('Energy reference type not recognized');
+            end
             refE = Hint(initIdx,initIdx);
             
             %% Change operators to BV2 (total electron spin)

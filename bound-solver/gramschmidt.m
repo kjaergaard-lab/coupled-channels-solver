@@ -1,4 +1,9 @@
 function U = gramschmidt(V)
+% GRAMSCHMIDT Creates an orthonormal set of vectors from the input vectors
+% using the Gram-Schmidt procedure
+%
+%   U = GRAMSCHMIDT(V) Creates orthnormal vectors U (as columns) from
+%   linearly independent vectors V (as columns)
 
 n = size(V,1);
 k = size(V,2);

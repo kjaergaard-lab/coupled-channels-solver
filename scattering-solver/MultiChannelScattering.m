@@ -1,7 +1,7 @@
-function [sm,wf] = MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
-% MultiChannel Computes the scattering properties of a pair of alkali metal
-% atoms
-%   Usage 1: MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
+function [sm,wf] = MultiChannelScattering(initLabel,Ein,Bin,outputFile,basis,opt)
+% MultiChannelScattering Computes the scattering properties of a pair of
+% alkali metal atoms
+%   Usage 1: MultiChannelScattering(initLabel,Ein,Bin,outputFile,basis,opt)
 %
 %   initLabel is four-element row vector [L,mL,State1,State2]
 %   specifying the entrance channel.  L is the angular momentum, mL is its
@@ -17,13 +17,13 @@ function [sm,wf] = MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
 %   saved.  If empty, the results are not saved
 %
 %   basis is either the file name of the .mat file storing the basis
-%   information or is a variable of type ATOMPAIR containing the basis
+%   information or is a variable of type ATOMPAIRBASIS containing the basis
 %   information
 %
 %   opt is an instance of SCATTOPTIONS containing options for the
 %   integration of the coupled channels equations
 %
-%   Usage 2: [sm,wf] = MultiChannel(initLabel,Ein,Bin,outputFile,basis,opt)
+%   Usage 2: [sm,wf] = MultiChannelScattering(initLabel,Ein,Bin,outputFile,basis,opt)
 %   sm is an instance of the ScatteringMatrix class which contains all the
 %   scattering information.  wf are the output radial wavefunctions which
 %   are calculated when opt.getwf = true.  It an array of structures with
@@ -41,7 +41,9 @@ elseif ischar(basis)
 else
     error('Basis set is neither a file nor a variable of type ''atompairbasis''');
 end
-basis.restrict(initLabel,opt.dipole);
+initIdx = basis.findstate(basis.bvint(:,[1,2,5,6]),initLabel);
+restrictLabel = [initLabel(1:2) sum(basis.bvint(initIdx,3:4))];
+basis.restrict(restrictLabel,opt.dipole);
 
 %% Scale input energies and magnetic fields
 if any(Bin<1e-3)
@@ -81,9 +83,9 @@ S = zeros(basis.Nchannels,basis.Nchannels,Nruns);
 if opt.parallel
     parfor mm=1:Nruns
         if eflag
-            mout = manolopoulos(E(mm),ops,basis,opt);
+            mout = manolopoulos_scatt(E(mm),ops,basis,opt);
         else
-            mout = manolopoulos(E,ops(mm),basis,opt); %#ok<PFBNS>
+            mout = manolopoulos_scatt(E,ops(mm),basis,opt); %#ok<PFBNS>
         end
         
         if opt.getwf            
@@ -96,9 +98,9 @@ if opt.parallel
 else
     for mm=1:Nruns
         if eflag
-            mout = manolopoulos(E(mm),ops,basis,opt);
+            mout = manolopoulos_scatt(E(mm),ops,basis,opt);
         else
-            mout = manolopoulos(E,ops(mm),basis,opt);
+            mout = manolopoulos_scatt(E,ops(mm),basis,opt);
         end
         
         if opt.getwf            

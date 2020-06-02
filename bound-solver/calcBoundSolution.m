@@ -1,17 +1,14 @@
-function [match,nodes,debugOut] = calcBoundSolution(r,Vfunc,E,ops,opt)
+function [match,nodes,debugOut] = calcBoundSolution(r,E,ops,opt)
 
 %% Parse arguments
-if nargin<5
+if nargin<4
     opt = boundoptions;
 elseif ~isa(opt,'boundoptions')
     error('Options argument ''opt'' must be of type boundoptions');
 end
 
 opt.direction = 1;
-% opt.stopAtRoot = true;
 opt.stopAfterR = true;
-% opt.stopAtR = true;
-% opt.stopR = 6;
 
 optR = opt;
 optR.stopAtRoot = false;
@@ -21,14 +18,14 @@ optR.direction = -1;
 
 if nargout>1 || opt.output
     opt.output = true;
-    [ysL,rs,nL,rL,yL,zL,dbgL] = manolopoulos(r,Vfunc,E,ops,opt);
+    [ysL,rs,nL,rL,yL,zL,dbgL] = manolopoulos_bound(r,E,ops,opt);
     optR.stopR = rs;
     optR.output = true;
-    [ysR,~,nR,rR,yR,zR,dbgR] = manolopoulos(r,Vfunc,E,ops,optR);
+    [ysR,~,nR,rR,yR,zR,dbgR] = manolopoulos_bound(r,E,ops,optR);
 else
-    [ysL,rs,nL] = manolopoulos(r,Vfunc,E,ops,opt);
+    [ysL,rs,nL] = manolopoulos_bound(r,E,ops,opt);
     optR.stopR = rs;
-    [ysR,~,nR] = manolopoulos(r,Vfunc,E,ops,optR);
+    [ysR,~,nR] = manolopoulos_bound(r,E,ops,optR);
 end
 
 
