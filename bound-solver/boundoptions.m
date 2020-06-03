@@ -24,7 +24,7 @@ classdef boundoptions
         blocksize   %Size of blocks with which to calculate dr
         blocks      %Indices of blocks
         
-        dipole   %Include dipole-dipole interaction
+        dipole      %Include dipole-dipole interaction
         changeR     %R value at which to change bases
         
     end

@@ -17,7 +17,7 @@ function [Eout,results] = MultiChannelBound(initLabel,Ein,Bin,outputFile,basis,o
 %   information or is a variable of type ATOMPAIRBASIS containing the basis
 %   information
 %
-%   opt is an instance of SCATTOPTIONS containing options for the
+%   opt is an instance of BOUNDOPTIONS containing options for the
 %   integration of the coupled channels equations
 %
 %   Usage 2: [sm,wf] = MultiChannelBound(initLabel,Ein,Bin,outputFile,basis,opt)

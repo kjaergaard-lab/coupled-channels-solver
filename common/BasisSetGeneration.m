@@ -14,7 +14,7 @@ if nargin==2
     filename = [AtomPair,' Basis Set ',Lstr];
 end
 
-basis = atompair(AtomPair,LVec);
+basis = atompairbasis(AtomPair,LVec);
 save(filename,'basis');
 
 end
