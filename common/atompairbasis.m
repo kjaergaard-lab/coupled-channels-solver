@@ -73,6 +73,22 @@ classdef atompairbasis < matlab.mixin.Copyable
                     self.pair = 'krb';
                     atoms = {const.K41,const.Rb87};
                     self.symmetry = 0;
+                case {'K39Rb87'}
+                    self.pair = 'krb';
+                    atoms = {const.K39,const.Rb87};
+                    self.symmetry = 0;
+                case {'K39Rb85'}
+                    self.pair = 'krb';
+                    atoms = {const.K39,const.Rb85};
+                    self.symmetry = 0;
+                case {'K40Rb85'}
+                    self.pair = 'krb';
+                    atoms = {const.K40,const.Rb85};
+                    self.symmetry = 0;
+                case {'K41Rb85'}
+                    self.pair = 'krb';
+                    atoms = {const.K41,const.Rb85};
+                    self.symmetry = 0;
                 case {'Rb85Rb85'}
                     self.pair = 'rbrb';
                     atoms = {const.Rb85,const.Rb85};

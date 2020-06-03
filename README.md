@@ -37,6 +37,10 @@ where 'AtomPair' is a string denoting which pair of atoms to consider, and 'LVec
 * 'K39K40'
 * 'K39K41'
 * 'K41Rb87'
+* 'K39Rb87'
+* 'K39Rb85'
+* 'K40Rb85'
+* 'K41Rb85'
 * 'Rb85Rb85'
 * 'Rb85Rb87'
 
@@ -157,6 +161,8 @@ The class 'boundoptions' contains a number of properties related to the integrat
 * output: create output wavefunctions
 * debug: display debugging information
 * stopR: r value to stop at when matching forwards and backwards integration
+* parallel: set to true to use a parfor loop and false to use a normal for loop
+* dipole: set to true to include the dipole-dipole interaction.  This will be very, very slow
 
 The outputs from MultiChannelBound are a matrix of bound state energies (in uK) which has dimensions numel(B) x (maximum number of bound states), since the number of bound states in a given energy range is dependent on the magnetic field.  Where there are fewer than the maximum number of bound states, the values replaced by NaNs.
 

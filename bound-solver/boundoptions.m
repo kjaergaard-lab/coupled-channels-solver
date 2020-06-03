@@ -24,6 +24,7 @@ classdef boundoptions
         blocksize   %Size of blocks with which to calculate dr
         blocks      %Indices of blocks
         
+        parallel    %Set to true (1) to use a parfor loop, false to use a normal loop
         dipole      %Include dipole-dipole interaction
         changeR     %R value at which to change bases
         
@@ -45,6 +46,9 @@ classdef boundoptions
             %   See also BOUNDOPTIONS.SET
             opt = opt.setDefaults;
             opt = opt.set(varargin{:});
+            if opt.dipole
+                opt.blocksize = 5;
+            end
         end
         
         function opt = setDefaults(opt)
@@ -71,6 +75,7 @@ classdef boundoptions
             opt.drscale = 1e-2;
             opt.blocksize = 15;
             
+            opt.parallel = true;
             opt.dipole = false;
             opt.changeR = 10;
         end
