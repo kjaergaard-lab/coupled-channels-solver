@@ -27,17 +27,18 @@ Before running either solver, you must create the basis states.  This can be don
     basis = atompairbasis(AtomPair,LVec);
 
 where 'AtomPair' is a string denoting which pair of atoms to consider, and 'LVec' is a vector of L values to use.  Valid 'AtomPair' values are:
-    * 'KRb' or 'K40Rb87'
-    * 'RbRb' or 'Rb87Rb87'
-    * 'KK' or 'K40K40'
-    * 'K41K41'
-    * 'K40K41'
-    * 'K39K39'
-    * 'K39K40'
-    * 'K39K41'
-    * 'K41Rb87'
-    * 'Rb85Rb85'
-    * 'Rb85Rb87'
+
+* 'KRb' or 'K40Rb87'
+* 'RbRb' or 'Rb87Rb87'
+* 'KK' or 'K40K40'
+* 'K41K41'
+* 'K40K41'
+* 'K39K39'
+* 'K39K40'
+* 'K39K41'
+* 'K41Rb87'
+* 'Rb85Rb85'
+* 'Rb85Rb87'
 
 Other combinations of the various isotopes can be added easily in the class defintion for 'atompairbasis'
 
@@ -55,15 +56,15 @@ Scattering problems are those where E - E_i > 0 for at least one channel in the 
 
 Here, E is specified in uK and B in Gauss - these are converted internally into units appropriate for the solver.  The variable 'initLabel' is a 4 element vector '[L mL internal1 internal2]' (an abridged version of bvint) and this specifies the entrance channel.  'outputFile' is the file to save all the variables to at the end of the calculation - if it is set to an empty string then nothing is saved.  'basis' is either an instance of the class 'atompairbasis' or it is a path pointing towards a previously saved basis file.  Finally, 'opt' is an instance of the class 'scattoptions' which provides a number of options related to the integration of the coupled channels equations.  These are:
 
-    * rmin: minimum integration distance
-    * rmax: maximum integration distance
-    * drscale: the scaling factor between the shortest WKB wavelength and the step size
-    * drmax: maximum step size
-    * drmin: minimum step size
-    * parallel: set to true to use a parfor loop, false to use a normal loop
-    * getwf: set to true to calculate wavefunctions in addition to scattering matrix
-    * dipole: set to true to use dipole-dipole interaction - this takes a lot of memory and can be very slow
-    * blocksize: size of blocks (in Angstroms) for which the step size is constant.  The potential operator is calculated and store in blocks of this size, so if it is too large you will run out of memory.  You should rarely need to change this.
+* rmin: minimum integration distance
+* rmax: maximum integration distance
+* drscale: the scaling factor between the shortest WKB wavelength and the step size
+* drmax: maximum step size
+* drmin: minimum step size
+* parallel: set to true to use a parfor loop, false to use a normal loop
+* getwf: set to true to calculate wavefunctions in addition to scattering matrix
+* dipole: set to true to use dipole-dipole interaction - this takes a lot of memory and can be very slow
+* blocksize: size of blocks (in Angstroms) for which the step size is constant.  The potential operator is calculated and store in blocks of this size, so if it is too large you will run out of memory.  You should rarely need to change this.
 
 The options class can be instantiated using
 
@@ -110,11 +111,11 @@ Bound state problems are those where E < E_i for all relevant channels so that o
 
 Since solutions to bound state problems occur only at specific energies, rather than having a solution at _every_ energy, finding bound states is more computationally intensive than solving for a scattering matrix.  The procedure that is used here is:
 
-    1. Define the basis states and coupled channels via '[L, mL, mF]'.
-    2. Choose an energy range (E <= 0) in which to search for bound states.  The larger the energy range, the longer this takes.
-    3. Use node counting to break the initial energy range into subranges containing exactly one bound state.
-    4. Within those subranges, integrate the equations in the forward and backward directions, subtract the resulting log-derivative matrices at a matching point, and find the energies at which that difference matrix has a zero eigenvalue.  These are bound state energies.
-    5. Optionally calculate the bound state wavefunctions
+1. Define the basis states and coupled channels via '[L, mL, mF]'.
+2. Choose an energy range (E <= 0) in which to search for bound states.  The larger the energy range, the longer this takes.
+3. Use node counting to break the initial energy range into subranges containing exactly one bound state.
+4. Within those subranges, integrate the equations in the forward and backward directions, subtract the resulting log-derivative matrices at a matching point, and find the energies at which that difference matrix has a zero eigenvalue.  These are bound state energies.
+5. Optionally calculate the bound state wavefunctions
 
 ### Basis states and coupled channels
 
@@ -151,11 +152,11 @@ This will solve for and plot the bound state energies as a function of magnetic 
 
 The class 'boundoptions' contains a number of properties related to the integration of the coupled channels equations.  Most of them will not need to be changed by the user, but ones that are of particular interest are:
 
-    * iter: number of iterations for converging on a bound state energy
-    * rangeiter: number of iterations for narrowing energy ranges using node counting
-    * output: create output wavefunctions
-    * debug: display debugging information
-    * stopR: r value to stop at when matching forwards and backwards integration
+* iter: number of iterations for converging on a bound state energy
+* rangeiter: number of iterations for narrowing energy ranges using node counting
+* output: create output wavefunctions
+* debug: display debugging information
+* stopR: r value to stop at when matching forwards and backwards integration
 
 The outputs from MultiChannelBound are a matrix of bound state energies (in uK) which has dimensions numel(B) x (maximum number of bound states), since the number of bound states in a given energy range is dependent on the magnetic field.  Where there are fewer than the maximum number of bound states, the values replaced by NaNs.
 
