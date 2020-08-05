@@ -102,7 +102,11 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
             for nn=1:size(intState,1)
                 cs = self.crossSec(intState(nn,5:6));
                 if cs(end)~=0
-                    plot(self.E,cs,'.-');
+                    if numel(self.E)>1
+                        plot(self.E,cs,'.-');
+                    else
+                        plot(self.B,cs,'.-');
+                    end
                     hold on;
                     str{jj} = sprintf('%d-%d',intState(nn,5:6)); %#ok<AGROW>
                     jj=jj+1;
