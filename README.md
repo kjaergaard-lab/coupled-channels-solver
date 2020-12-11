@@ -1,4 +1,5 @@
 # Coupled Channels Solver
+[![DOI](https://zenodo.org/badge/268698521.svg)](https://zenodo.org/badge/latestdoi/268698521)
 
 This suite of MATLAB code is designed for solving coupled channels equations that arise when considering either the scattering or bound state properties of ultracold alkali metal atoms in magnetic fields.  Code for handling scattering problems can be found in the folder 'scattering-solver', and code for handling bound state problems can be found in the folder 'bound-solver'.  Both of these use files from the folder 'common'.
 
