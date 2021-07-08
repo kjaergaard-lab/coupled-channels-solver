@@ -74,35 +74,12 @@ results(Nruns,1) = boundresults;
 % maxBoundStates = 0;
 if opt(1).parallel
     parfor nn=1:Nruns
-        fprintf(1,'Run %d/%d at B = %.5e\n',nn,Nruns,B(nn));
+        fprintf(1,'Run %d/%d at B = %.5e T\n',nn,Nruns,B(nn));
         results(nn) = getResults(E,basis,ops(nn),opt(nn));
-        
-%         [r,opt(nn).blocks] = makegrid(max(E),ops(nn),opt(nn));
-%         Eranges = findranges(r,E,true,ops(nn),opt(nn));
-% 
-%         if opt(nn).debug
-%             fprintf(1,'Number of bound states between [%#.5g,%#.5g]: %d\n',Ein(1),Ein(2),size(Eranges,2));
-%         end
-%         results(nn).r = r;
-%         results(nn).bt2int = ops(nn).BT2int;
-%         results(nn).bv2 = basis.bv2;
-%         results(nn).bvint = basis.bvint;
-%         results(nn).basis = 1;
-% 
-%         for mm=1:size(Eranges,2)
-%             if opt(nn).output
-%                 [Ebound,wf] = solvebound(r,Eranges(:,mm),ops(nn),opt(nn));
-%                 results(nn).E{mm} = Ebound/const.K2A(basis.mass)*1e6;
-%                 results(nn).wf{mm,1} = wf;
-%             else
-%                 Ebound = solvebound(r,Eranges(:,mm),ops(nn),opt(nn));
-%                 results(nn).E{mm} = Ebound/const.K2A(basis.mass)*1e6;
-%             end
-%         end
     end
 else
     for nn=1:Nruns
-        fprintf(1,'Run %d/%d at B = %.5e\n',nn,Nruns,B(nn));
+        fprintf(1,'Run %d/%d at B = %.5e T\n',nn,Nruns,B(nn));
         results(nn) = getResults(E,basis,ops(nn),opt(nn));
     end
 end
@@ -144,9 +121,10 @@ results.basis = 1;
 
 for mm=1:size(Eranges,2)
     if opt.output
-        [Ebound,wf] = solvebound(r,Eranges(:,mm),ops,opt);
+        [Ebound,wf,~,nodes] = solvebound(r,Eranges(:,mm),ops,opt);
         results.E{mm} = Ebound/const.K2A(basis.mass)*1e6;
         results.wf{mm,1} = wf;
+        results.nodes{mm} = nodes;
     else
         Ebound = solvebound(r,Eranges(:,mm),ops,opt);
         results.E{mm} = Ebound/const.K2A(basis.mass)*1e6;

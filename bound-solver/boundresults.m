@@ -4,6 +4,7 @@ classdef boundresults < handle
     properties
         Nbound  %Number of bound states
         basis   %Basis of the wavefunctions
+        nodes   %Multi-channel node count
         E       %Bound state energies as an 1xNbound cell array
         r       %Vector of internuclear separations
         wf      %Wavefunctions as a 1xNbound cell array for each eigenvector
