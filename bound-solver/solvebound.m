@@ -143,8 +143,10 @@ if opt.debug || nargout>1
     uR = flip(uR,2);
     
     u = [uL uR(:,2:end)];
-    dr = repmat(diff(r(:)'),size(u,1),1);
-    u = u./sqrt(sum(sum(abs(u(:,1:end-1)).^2.*dr,2),1));   
+%     dr = repmat(diff(r(:)'),size(u,1),1);
+%     u = u./sqrt(sum(sum(abs(u(:,1:end-1)).^2.*dr,2),1));   
+    uNorm = sqrt(sum(trapz(r,abs(u).^2,2)));
+    u = u./uNorm;
 end
 
 if opt.debug
