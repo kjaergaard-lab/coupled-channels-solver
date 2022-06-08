@@ -148,6 +148,9 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
             %   then the element that is accessed is the one starting from
             %   the 4-element vector [L1,mL1,int1_1,int2_1] and ending with
             %   [L2,mL2,int1_2,int2_2]
+            if numel(self) > 1
+                B = builtin('subsref',self,S);
+            end
             idx1 = self.targetIndex;
             idx2 = idx1;
             for nn=1:numel(S)
