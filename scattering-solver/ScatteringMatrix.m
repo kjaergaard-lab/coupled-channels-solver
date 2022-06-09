@@ -63,10 +63,10 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
             %   section for atoms starting in initState and ending in
             %   finalState.  Both initState and finalState must be 1x2
             %   vectors specifying states in the internal basis
-            if nargin==1
+            if nargin == 1
                 initState = self.bv(self.targetIndex,5:6);
                 finalState = initState;
-            elseif nargin==2
+            elseif nargin == 2
                 if ~ischar(varargin{1})
                     initState = self.bv(self.targetIndex,5:6);
                     finalState = varargin{1};
@@ -85,7 +85,7 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
                         return;
                     end
                 end
-            elseif nargin==3
+            elseif nargin == 3
                 initState = varargin{1};
                 finalState = varargin{2};
             end
@@ -114,6 +114,62 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
             end
             hold off;
             legend(str);
+            fs = 10;
+            xlabel('Collision Energy [uK]','FontSize',fs);
+            ylabel('Cross section [m^2]','FontSize',fs);
+        end
+
+        function R = collisionRate(self,varargin)
+            %COLLISIONRATE Calculates and returns various collision rate
+            %coefficients
+            %
+            %   R = collisionRate() calculates the elastic collision rate
+            %   coefficient starting and ending in the entrance channel
+            %
+            %   cs = collisionRate(finalState) where finalState is a 1x2
+            %   vector calculates the collision rate coefficient for
+            %   collisions starting in the entrance channel states and
+            %   ending in the final internal states given by finalState
+            %
+            %   cs = collisionRate('total') calculates the total collision
+            %   rate coefficient for atoms starting in the entrance channel
+            %
+            %   cs = collisionRate('inelastic') calculates the total
+            %   inelastic collision rate coefficient (total - elastic)
+            %
+            %   cs = collisionRate(initState,finalState) calculates the
+            %   collision rate coefficient for atoms starting in initState
+            %   and ending in finalState.  Both initState and finalState
+            %   must be 1x2 vectors specifying states in the internal basis
+
+            cs = self.crossSec(varargin{:});
+            R = cs.*const.hbar.*self.k/self.mass;
+        end
+
+        function self = plotCollisionRates(self)
+            %PLOTCOLLISIONRATES Plots all partial collision rate
+            %coefficients starting from the entrance state
+            [~,ia] = unique(self.bv(:,5:6),'stable','rows');
+            intState = self.bv(ia,:);
+            jj = 1;
+            clf;
+            for nn=1:size(intState,1)
+                R = self.collisionRate(intState(nn,5:6));
+                if R(end)~=0
+                    if numel(self.E)>1
+                        plot(self.E,R,'.-');
+                    else
+                        plot(self.B,R,'.-');
+                    end
+                    hold on;
+                    str{jj} = sprintf('%d-%d',intState(nn,5:6)); %#ok<AGROW>
+                    jj=jj+1;
+                end
+            end
+            hold off;
+            legend(str);
+            xlabel('Collision Energy [uK]','FontSize',fs);
+            ylabel('Two-body rate coefficient [m^3/s]','FontSize',fs);
         end
         
         function B = subsref(self,S)
