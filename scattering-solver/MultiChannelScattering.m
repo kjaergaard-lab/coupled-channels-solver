@@ -64,7 +64,7 @@ elseif numel(Ein)==1 && numel(Bin)>=1
 else
     error('Only one of Bin and Ein can have more than one element!');
 end
-E = Ein*1e-6*const.K2A(basis.mass); %Convert from uK to inverse wavenumbers
+E = Ein*1e-6*scattconst.K2A(basis.mass); %Convert from uK to inverse wavenumbers
 B = Bin*1e-4;                       %Convert from G to T
 
 %% Generate operators/terms in Hamiltonian

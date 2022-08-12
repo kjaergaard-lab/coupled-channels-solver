@@ -37,9 +37,9 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
         
         function set.E(self,E)
             %set.E Sets the energy (in uK) and calculates the wavenumber
-            tmp = E(:)*const.kb/1e6;
+            tmp = E(:)*scattconst.kb/1e6;
             self.E = E(:);
-            self.k = sqrt(2*self.mass/const.hbar^2*tmp(:));  %#ok
+            self.k = sqrt(2*self.mass/scattconst.hbar^2*tmp(:));  %#ok
         end
         
         function cs = crossSec(self,varargin)
@@ -112,6 +112,11 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
                     jj=jj+1;
                 end
             end
+            if numel(self.E) > 1
+                plot(self.E,self.crossSec('inelastic'),'k--','LineWidth',1.5);
+            else
+                plot(self.B,self.crossSec('inelastic'),'k--','LineWidth',1.5);
+            end
             hold off;
             legend(str);
             fs = 10;
@@ -143,7 +148,7 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
             %   must be 1x2 vectors specifying states in the internal basis
 
             cs = self.crossSec(varargin{:});
-            R = cs.*const.hbar.*self.k/self.mass;
+            R = cs.*scattconst.hbar.*self.k/self.mass;
         end
 
         function self = plotCollisionRates(self)
@@ -152,7 +157,6 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
             [~,ia] = unique(self.bv(:,5:6),'stable','rows');
             intState = self.bv(ia,:);
             jj = 1;
-            clf;
             for nn=1:size(intState,1)
                 R = self.collisionRate(intState(nn,5:6));
                 if R(end)~=0
@@ -166,8 +170,14 @@ classdef ScatteringMatrix < matlab.mixin.Copyable
                     jj=jj+1;
                 end
             end
+            if numel(self.E) > 1
+                plot(self.E,self.collisionRate('inelastic'),'k--','LineWidth',1.5);
+            else
+                plot(self.B,self.collisionRate('inelastic'),'k--','LineWidth',1.5);
+            end
             hold off;
             legend(str);
+            fs = 10;
             xlabel('Collision Energy [uK]','FontSize',fs);
             ylabel('Two-body rate coefficient [m^3/s]','FontSize',fs);
         end

@@ -39,70 +39,70 @@ classdef atompairbasis < matlab.mixin.Copyable
             switch pair
                 case {'KRb','K40Rb87'}
                     self.pair = 'krb';
-                    atoms = {const.K40,const.Rb87};
+                    atoms = {scattconst.K40,scattconst.Rb87};
                     self.symmetry = 0;
                 case {'RbRb','Rb87Rb87'}
                     self.pair = 'rbrb';
-                    atoms = {const.Rb87,const.Rb87};
+                    atoms = {scattconst.Rb87,scattconst.Rb87};
                     self.symmetry = 1;
                 case {'KK','K40K40'}
                     self.pair = 'kk';
-                    atoms = {const.K40,const.K40};
+                    atoms = {scattconst.K40,scattconst.K40};
                     self.symmetry = -1;
                 case {'K41K41'}
                     self.pair = 'kk';
-                    atoms = {const.K41,const.K41};
+                    atoms = {scattconst.K41,scattconst.K41};
                     self.symmetry = 1;
                 case {'K40K41'}
                     self.pair = 'kk';
-                    atoms = {const.K40,const.K41};
+                    atoms = {scattconst.K40,scattconst.K41};
                     self.symmetry = 0;
                 case {'K39K39'}
                     self.pair = 'kk';
-                    atoms = {const.K39,const.K39};
+                    atoms = {scattconst.K39,scattconst.K39};
                     self.symmetry = 1;
                 case {'K39K41'}
                     self.pair = 'kk';
-                    atoms = {const.K39,const.K41};
+                    atoms = {scattconst.K39,scattconst.K41};
                     self.symmetry = 0;
                 case {'K39K40'}
                     self.pair = 'kk';
-                    atoms = {const.K39,const.K40};
+                    atoms = {scattconst.K39,scattconst.K40};
                     self.symmetry = 0;
                 case {'K41Rb87'}
                     self.pair = 'krb';
-                    atoms = {const.K41,const.Rb87};
+                    atoms = {scattconst.K41,scattconst.Rb87};
                     self.symmetry = 0;
                 case {'K39Rb87'}
                     self.pair = 'krb';
-                    atoms = {const.K39,const.Rb87};
+                    atoms = {scattconst.K39,scattconst.Rb87};
                     self.symmetry = 0;
                 case {'K39Rb85'}
                     self.pair = 'krb';
-                    atoms = {const.K39,const.Rb85};
+                    atoms = {scattconst.K39,scattconst.Rb85};
                     self.symmetry = 0;
                 case {'K40Rb85'}
                     self.pair = 'krb';
-                    atoms = {const.K40,const.Rb85};
+                    atoms = {scattconst.K40,scattconst.Rb85};
                     self.symmetry = 0;
                 case {'K41Rb85'}
                     self.pair = 'krb';
-                    atoms = {const.K41,const.Rb85};
+                    atoms = {scattconst.K41,scattconst.Rb85};
                     self.symmetry = 0;
                 case {'Rb85Rb85'}
                     self.pair = 'rbrb';
-                    atoms = {const.Rb85,const.Rb85};
+                    atoms = {scattconst.Rb85,scattconst.Rb85};
                     self.symmetry = 1;
                 case {'Rb85Rb87'}
                     self.pair = 'rbrb';
-                    atoms = {const.Rb85,const.Rb87};
+                    atoms = {scattconst.Rb85,scattconst.Rb87};
                     self.symmetry = 0;
                 otherwise
                     error('Atom pair not supported');
             end
             self.nspin = [atoms{1}.nspin,atoms{2}.nspin];
             self.mass = atoms{1}.mass*atoms{2}.mass/(atoms{1}.mass+atoms{2}.mass);
-            self.scale = const.cm2K*const.K2A(self.mass);
+            self.scale = scattconst.cm2K*scattconst.K2A(self.mass);
             self.Ahfs = [atoms{1}.Ahfs,atoms{2}.Ahfs];
             self.gS = [atoms{1}.gS,atoms{2}.gS];
             self.gI = [atoms{1}.gI,atoms{2}.gI];
@@ -324,16 +324,16 @@ classdef atompairbasis < matlab.mixin.Copyable
             %   whether or not to use the dipole-dipole interaction dipole
             Hint0_1 = 0.5*(self.bv3(:,3).*(self.bv3(:,3)+1)-self.espin*(self.espin+1)-self.nspin(1)*(self.nspin(1)+1));
             Hint0_2 = 0.5*(self.bv3(:,5).*(self.bv3(:,5)+1)-self.espin*(self.espin+1)-self.nspin(2)*(self.nspin(2)+1));
-            Hint0 = const.h*1e6/const.kb*const.K2A(self.mass)*diag(self.Ahfs(1)*Hint0_1+self.Ahfs(2)*Hint0_2);  %In BV3, as inverse wavenumbers [Angstroms^{-2}]
+            Hint0 = scattconst.h*1e6/scattconst.kb*scattconst.K2A(self.mass)*diag(self.Ahfs(1)*Hint0_1+self.Ahfs(2)*Hint0_2);  %In BV3, as inverse wavenumbers [Angstroms^{-2}]
             Hint0 = self.bt31'*Hint0*self.bt31; %In BV1
             SpinOp = 0.5*diag(self.bv2(:,3).*(self.bv2(:,3)+1)-2*self.espin*(self.espin+1));    %In BV2, no units
             if dipole
-                Hdd = (-sqrt(6)*const.alpha.^2.*const.EHartree).*(const.aBohr*1e10)^3*const.K2A(self.mass)/const.kb*DipoleDipole(self.bv1); %In BV1, as inverse wavenumbers*length^3, or Angstroms
+                Hdd = (-sqrt(6)*scattconst.alpha.^2.*scattconst.EHartree).*(scattconst.aBohr*1e10)^3*scattconst.K2A(self.mass)/scattconst.kb*DipoleDipole(self.bv1); %In BV1, as inverse wavenumbers*length^3, or Angstroms
             else
                 Hdd = zeros(self.Nchannels);
             end
             
-            HZ = const.muB*B/const.kb*const.K2A(self.mass)*diag(self.atoms{1}.gS*self.bv1(:,3)+self.atoms{2}.gS*self.bv1(:,5)+...
+            HZ = scattconst.muB*B/scattconst.kb*scattconst.K2A(self.mass)*diag(self.atoms{1}.gS*self.bv1(:,3)+self.atoms{2}.gS*self.bv1(:,5)+...
                  self.atoms{1}.gI*self.bv1(:,4)+self.atoms{2}.gI*self.bv1(:,6));    %In BV1, as inverse wavenumbers [Angstroms^{-2}]
             
             Hint = Hint0+HZ;

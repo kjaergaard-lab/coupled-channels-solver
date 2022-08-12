@@ -57,7 +57,7 @@ classdef atomproperties < handle
             end
             
             %% Zeeman field
-            HZ = diag(const.muB*B*(self.gS*label(:,1)+self.gI*label(:,2)))/const.h/1e6; %In [MHz]
+            HZ = diag(scattconst.muB*B*(self.gS*label(:,1)+self.gI*label(:,2)))/scattconst.h/1e6; %In [MHz]
             Hint = H0+HZ;
             [V,E] = eig(Hint,'vector');
             [E,idx] = sort(E);
